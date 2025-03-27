@@ -5,14 +5,13 @@ import random
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-import torch.nn.functional as F
 
 from models.networks import VGG_3_8_15_22
 from models.MetaNet_model import TransformNet, MetaNet
 
 from data.ImageDataset import ImageDataset
 import utils.config as Config
-from utils.utils import mean_std, denormalize, create_grid
+from utils.utils import mean_std, denormalize, create_grid, save_model
 
 import swanlab
 
@@ -39,6 +38,8 @@ def train(model_vgg, model_transform, metanet):
                 trainable_params[name] = param
                 trainable_param_shapes[name] = param.shape
 
+    loss_content = torch.nn.functional.mse_loss
+    loss_style = torch.nn.functional.mse_loss
     optimizer = torch.optim.Adam(trainable_params.values(), Config.get_lr())
     
     metanet.train()
@@ -77,9 +78,9 @@ def train(model_vgg, model_transform, metanet):
             transformed_features = model_vgg(output)
             transformed_mean_std = mean_std(transformed_features)
                     
-            content_loss = content_weight * F.mse_loss(transformed_features[2], content_features[2])
-            style_loss = style_weight * F.mse_loss(transformed_mean_std,
-                                                                 style_mean_std.expand_as(transformed_mean_std))
+            content_loss = content_weight * loss_content(transformed_features[2], content_features[2])
+            style_loss = style_weight * loss_style(transformed_mean_std,
+                                                   style_mean_std.expand_as(transformed_mean_std))
             y = output
             tv_loss = tv_weight * (torch.sum(torch.abs(y[:, :, :, :-1] - y[:, :, :, 1:])) +
                                                     torch.sum(torch.abs(y[:, :, :-1, :] - y[:, :, 1:, :])))
@@ -107,9 +108,14 @@ def train(model_vgg, model_transform, metanet):
                     max_value: {avg_max_value / len(content_data_loader)} ")
         
         if (epoch + 1) % record_per_epochs == 0:
-            val(content_dataset, style_dataset, model_vgg, model_transform, metanet, test_batch)
+            if Config.is_save:
+                save_model(model_transform, Config.get_model_save(), f"transform_{epoch + 1}.pth")
+                save_model(metanet, Config.get_model_save(), f"metanet_{epoch + 1}.pth")
+                
+            val_in_training(content_dataset, style_dataset,
+                            model_vgg, model_transform, metanet, test_batch)
 
-def val(content_dataset, style_dataset, model_vgg, model_transform, metanet, test_batch):
+def val_in_training(content_dataset, style_dataset, model_vgg, model_transform, metanet, test_batch):
     random_idx = random.randint(0, len(style_dataset) - 1)
     style_tensor = style_dataset[random_idx].unsqueeze(0).to(Config.device)
     

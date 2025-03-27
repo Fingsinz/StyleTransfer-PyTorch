@@ -3,6 +3,8 @@
 swanlab:
   enable: false
 
+model_save_path: "../results/models"
+
 training:
   # 训练轮数
   epochs: 100

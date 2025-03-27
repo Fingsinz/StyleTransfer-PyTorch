@@ -12,6 +12,7 @@ def load_config(config_path):
 config = load_config("config.yaml")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 is_swanlab = config['swanlab'].get('enable', False)
+is_save = False if get_model_save() == '' else True
 
 def get_epochs(training_config=config['training']):
     return training_config.get('epochs', 10)
@@ -44,3 +45,5 @@ def get_data(data_config=config['data']):
 def get_num_workers(data_config=config['data']):
     return data_config.get('num_workers', 4)
 
+def get_model_save(model_config=config['model_save_path']):
+    return model_config.get('model_save_path', '')

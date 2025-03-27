@@ -8,20 +8,20 @@ import matplotlib.pyplot as plt
 import utils.config as Config
 from models.networks import VGG_3_8_15_22
 from models.MetaNet_model import TransformNet, MetaNet
-from utils.utils import mean_std, denormalize
+from utils.utils import mean_std, denormalize, check_dir, load_model
 
 def one_image_transfer(content_path, style_path, model_vgg, model_transform, metanet):
     preprocess = transforms.Compose([
-        transforms.Resize((256, 256)),          # 强制缩放至256x256
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
-    style_image = Image.open(style_path).convert('RGB')
-    style_tensor = preprocess(style_image).unsqueeze(0).to(Config.device)
-
     content_image = Image.open(content_path).convert('RGB')
     content_tensor = preprocess(content_image).unsqueeze(0).to(Config.device)
+    content_img_width, content_img_height = content_image.size
+
+    style_image = Image.open(style_path).convert('RGB')
+    style_tensor = preprocess(style_image).unsqueeze(0).to(Config.device)
 
     with torch.inference_mode():
         style_features = model_vgg(style_tensor)
@@ -34,27 +34,29 @@ def one_image_transfer(content_path, style_path, model_vgg, model_transform, met
         transformed_tensor = model_transform(content_tensor)
     model_transform.train()
 
-    content_vis = denormalize(content_tensor).squeeze(0).cpu().permute(1, 2, 0).numpy()
     transformed_vis = denormalize(transformed_tensor).squeeze(0).cpu().permute(1, 2, 0).numpy()
-    style_vis = denormalize(style_tensor).squeeze(0).cpu().permute(1, 2, 0).numpy() 
+    transformed_pil = Image.fromarray((transformed_vis * 255).astype(np.uint8))
+    transformed_pil = transformed_pil.resize((content_img_width, content_img_height), Image.LANCZOS)
 
-    comparison = np.concatenate([content_vis, style_vis, transformed_vis], axis=1)
-    plt.imshow(comparison)
-    plt.axis('off')
-    plt.savefig(f"./{os.path.basename(content_path).split('.')[0]}+{os.path.basename(style_path).split('.')[0]}.png")
-    plt.close()
+    out_dir = check_dir('./output')
+    filename = os.path.basename(content_path).split('.')[0] + \
+        os.path.basename(style_path).split('.')[0] + '.png'
+
+    output_path = f"./{out_dir}/{filename}"
+    transformed_pil.save(output_path)
+    print(f"[INFO] Result saved to {output_path}")
     
 if __name__ == "__main__":
     
     vgg16 = VGG_3_8_15_22().to(Config.device).eval()
     
     load_transform_net = TransformNet(Config.get_base()).to(Config.device)
-    load_transform_net.load_state_dict(torch.load('./transform_net_100.pth',
-                                                  map_location=Config.device, weights_only=True))
+    load_model(load_transform_net, './transform_net_100.pth')
+    load_transform_net.to(Config.device)
     
     load_metanet = MetaNet(load_transform_net.get_param_dict()).to(Config.device)
-    load_metanet.load_state_dict(torch.load('./MetaNet_100.pth',
-                                            map_location=Config.device, weights_only=True))
+    load_model(load_metanet, './metanet_100.pth')
+    load_metanet.to(Config.device)
     
     one_image_transfer(content_path='./content1.JPEG', style_path='./style1.jpg',
                        model_vgg=vgg16, model_transform=load_transform_net, metanet=load_metanet)
