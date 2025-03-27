@@ -2,7 +2,11 @@
 # https://aistudio.baidu.com/datasetdetail/222219 下面的 WikiArt2.zip
 wget https://ia801206.us.archive.org/11/items/WikiArt_dataset/WikiArt_000.tar
 
-mv WikiArt_000.tar ../datasets
+if [ ! -d "../datasets" ]; then
+    mkdir ../datasets
+fi
+
+mv WikiArt_000.tar ../datasets/
 
 cd ../datasets
 
