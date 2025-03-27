@@ -1,7 +1,9 @@
 import os
+import time
 from tqdm import tqdm
 import random
 
+from PIL import Image
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -49,7 +51,10 @@ def train(model_vgg, model_transform, metanet):
     record_per_epochs = Config.get_record_per_epochs()
     test_batch = Config.get_test_batch()
     epochs = Config.get_epochs()
+    
     is_save = False if Config.get_model_save() == '' else True
+    now_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
+    record_path = check_dir(f"../results/{now_time}")
     
     for epoch in range(epochs):
         content_loss_sum = 0
@@ -109,15 +114,17 @@ def train(model_vgg, model_transform, metanet):
                     max_value: {avg_max_value / len(content_data_loader)} ")
         
         if (epoch + 1) % record_per_epochs == 0:
-            if Config.is_save:
-                result_dir = check_dir(Config.get_model_save())
+            if is_save:
+                result_dir = check_dir(record_path + "/pth/")
                 save_model(model_transform, result_dir, f"transform_{epoch + 1}.pth")
                 save_model(metanet, result_dir, f"metanet_{epoch + 1}.pth")
                 
             val_in_training(content_dataset, style_dataset,
-                            model_vgg, model_transform, metanet, test_batch)
+                            model_vgg, model_transform, metanet,
+                            test_batch, epoch + 1, record_path)
 
-def val_in_training(content_dataset, style_dataset, model_vgg, model_transform, metanet, test_batch):
+def val_in_training(content_dataset, style_dataset, model_vgg, model_transform, metanet,
+                    test_batch, epoch, val_path=""):
     random_idx = random.randint(0, len(style_dataset) - 1)
     style_tensor = style_dataset[random_idx].unsqueeze(0).to(Config.device)
     
@@ -139,6 +146,12 @@ def val_in_training(content_dataset, style_dataset, model_vgg, model_transform, 
         transformed_vis = denormalize(transformed_images).cpu().detach().permute(0, 2, 3, 1).numpy()
 
         merged_image = create_grid(style_images, content_vis, transformed_vis)
+        
+        if val_path != "":
+            val_path = check_dir(val_path + "/png/")
+            file_name = f"{val_path}transformed_grid_{epoch}.png"
+            Image.fromarray(merged_image).save(file_name)
+            print(f"[INFO] Image saved to {file_name}")
     
         if Config.is_swanlab:
             swanlab.log({'transformed_grid': swanlab.Image(merged_image)})

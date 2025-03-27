@@ -12,23 +12,31 @@ class TransformNet(nn.Module):
         super(TransformNet, self).__init__()
         self.base = base
         self.weights = []
+        
         self.downsampling = nn.Sequential(
             *ConvLayer(3, base, kernel_size=9, trainable=True),
-            *ConvLayer(base, base * 2, kernel_size=3, stride=2),
-            *ConvLayer(base * 2, base * 4, kernel_size=3, stride=2)
+            *ConvLayer(base, base * 2, kernel_size=3, stride=1),
+            nn.MaxPool2d(kernel_size=2, stride=2),  # 显式下采样
+            *ConvLayer(base * 2, base * 4, kernel_size=3, stride=1),
+            nn.MaxPool2d(kernel_size=2, stride=2),
         )
+        
         self.residuals = nn.Sequential(*[ResidualBlock_2Conv_NoTrain(base*4) for _ in range(5)])
+        
         self.upsampling = nn.Sequential(
             *ConvLayer(base * 4, base * 2, kernel_size=3, upsample=2),
             *ConvLayer(base * 2, base, kernel_size=3, upsample=2),
             *ConvLayer(base, 3, kernel_size=9, instance_norm=False, relu=False, trainable=True)
         )
+        
         self.get_param_dict()
 
     def forward(self, x):
+        orig_h, orig_w = x.shape[2], x.shape[3]
         y = self.downsampling(x)
         y = self.residuals(y)
         y = self.upsampling(y)
+        y = F.interpolate(y, size=(orig_h, orig_w), mode='bilinear',align_corners=False)
         return y
     
     def get_param_dict(self):

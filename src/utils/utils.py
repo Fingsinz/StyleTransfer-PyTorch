@@ -35,7 +35,7 @@ def check_dir(path: str)-> str:
 def save_model(model: torch.nn.Module, save_path: str, model_name: str):
     check_dir(save_path)
     assert model_name.endswith('.pth'), 'model name should end with .pth'
-    model_save_path = os.path.join(save_path, model_name)
+    model_save_path = save_path + model_name
     
     torch.save(obj=model.state_dict(), f=model_save_path)
     print(f"[INFO] Model saved to {model_save_path}")

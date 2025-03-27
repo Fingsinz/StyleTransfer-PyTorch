@@ -85,7 +85,7 @@ def ConvLayer(in_channels, out_channels, kernel_size=3, stride=1, upsample=None,
     """
     layers = []
     if upsample:
-        layers.append(nn.Upsample(mode='nearest', scale_factor=upsample))
+        layers.append(nn.Upsample(scale_factor=upsample, mode='bilinear', align_corners=False))
 
     layers.append(nn.ReflectionPad2d(kernel_size // 2))  # 填充以保持空间维度
 
