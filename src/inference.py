@@ -38,7 +38,7 @@ def one_image_transfer(content_path, style_path, model_vgg, model_transform, met
     transformed_pil = Image.fromarray((transformed_vis * 255).astype(np.uint8))
     transformed_pil = transformed_pil.resize((content_img_width, content_img_height), Image.LANCZOS)
 
-    out_dir = check_dir('./output')
+    out_dir = check_dir('../output')
     filename = os.path.basename(content_path).split('.')[0] + \
         os.path.basename(style_path).split('.')[0] + '.png'
 

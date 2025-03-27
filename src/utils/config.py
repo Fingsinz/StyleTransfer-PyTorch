@@ -12,7 +12,6 @@ def load_config(config_path):
 config = load_config("config.yaml")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 is_swanlab = config['swanlab'].get('enable', False)
-is_save = False if get_model_save() == '' else True
 
 def get_epochs(training_config=config['training']):
     return training_config.get('epochs', 10)

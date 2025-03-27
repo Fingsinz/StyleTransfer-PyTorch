@@ -11,7 +11,7 @@ from models.MetaNet_model import TransformNet, MetaNet
 
 from data.ImageDataset import ImageDataset
 import utils.config as Config
-from utils.utils import mean_std, denormalize, create_grid, save_model
+from utils.utils import mean_std, denormalize, create_grid, save_model, check_dir
 
 import swanlab
 
@@ -49,6 +49,7 @@ def train(model_vgg, model_transform, metanet):
     record_per_epochs = Config.get_record_per_epochs()
     test_batch = Config.get_test_batch()
     epochs = Config.get_epochs()
+    is_save = False if Config.get_model_save() == '' else True
     
     for epoch in range(epochs):
         content_loss_sum = 0
@@ -109,8 +110,9 @@ def train(model_vgg, model_transform, metanet):
         
         if (epoch + 1) % record_per_epochs == 0:
             if Config.is_save:
-                save_model(model_transform, Config.get_model_save(), f"transform_{epoch + 1}.pth")
-                save_model(metanet, Config.get_model_save(), f"metanet_{epoch + 1}.pth")
+                result_dir = check_dir(Config.get_model_save())
+                save_model(model_transform, result_dir, f"transform_{epoch + 1}.pth")
+                save_model(metanet, result_dir, f"metanet_{epoch + 1}.pth")
                 
             val_in_training(content_dataset, style_dataset,
                             model_vgg, model_transform, metanet, test_batch)
