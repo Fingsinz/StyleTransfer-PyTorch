@@ -45,4 +45,4 @@ def get_num_workers(data_config=config['data']):
     return data_config.get('num_workers', 4)
 
 def get_model_save(model_config=config['model_save_path']):
-    return model_config.get('model_save_path', '')
+    return model_config
