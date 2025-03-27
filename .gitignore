@@ -8,4 +8,4 @@
 *.pth
 
 # 数据集文件
-dataset/*
+datasets/*
