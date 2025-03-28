@@ -33,7 +33,9 @@ def train():
     style_grams = [gram_matrix(f) for f in style_features]
 
     # 训练循环
-    for step in tqdm(range(config["epochs"])):
+    loss = 0
+    bar = tqdm(range(config["epochs"]), ncols=80)
+    for step in bar:
         generated = generator(content_img)
         gen_features = extractor(generated)
         
@@ -50,23 +52,25 @@ def train():
         total_loss = config["content_weight"] * content_loss + config["style_weight"] * style_loss
         
         # 优化步骤
+        loss = total_loss.item()
+        bar.set_description(f"loss: {loss:.4f}")
+        bar.update()
+        
         optimizer.zero_grad()
         total_loss.backward()
         optimizer.step()
         
-        if step % 50 == 0 or step == config["epochs"]-1:
+        if (step + 1) % 50 == 0 or (step + 1) == config["epochs"]:
             swanlab.log({"content_loss": content_loss, "style_loss": style_loss, "total_loss": total_loss.item()})
             output = generated.clone().detach().cpu().squeeze()
             output = output * torch.tensor([0.229, 0.224, 0.225]).view(3,1,1)
             output += torch.tensor([0.485, 0.456, 0.406]).view(3,1,1)
             image = swanlab.Image(output.clamp(0,1), caption="example")
             swanlab.log({"Output": image})
-
-            print(f"Step {step}: Loss={total_loss.item():.2f}")
             
-        if step == config["epochs"]-1:
+        if (step + 1) == config["epochs"]:
             # 保存生成图像
-            save_image(output.clamp(0,1), f"run2_output_{step}.png")
+            save_image(output.clamp(0, 1), f"run2_output_{step}.png")
 
     print("Training completed!")
     save_model(generator, target_dir="models", model_name="test_model2.pth")
