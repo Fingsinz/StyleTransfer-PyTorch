@@ -33,16 +33,19 @@ class UNet(nn.Module):
         b = self.bottleneck(p2)
         
         d2 = self.decoder2(b)
-        d2 = self._crop_and_cat(d2, e2)
+        d2 = self._pad_and_cat(d2, e2)
         d1 = self.decoder1(d2)
-        d1 = self._crop_and_cat(d1, e1)
+        d1 = self._pad_and_cat(d1, e1)
         
         return self.final(d1)
         
-    def _crop_and_cat(self, up, skip):
-        """对齐特征图尺寸"""
-        _, _, h, w = up.shape
-        skip = transforms.CenterCrop((h, w))(skip)
+    def _pad_and_cat(self, up, skip):
+        diff_h = skip.size()[2] - up.size()[2]
+        diff_w = skip.size()[3] - up.size()[3]
+        
+        # 对称填充
+        up = nn.functional.pad(up, [diff_w // 2, diff_w - diff_w // 2,
+                                    diff_h // 2, diff_h - diff_h // 2])
         return torch.cat([up, skip], dim=1) 
         
     def down_block(self, in_channels, out_channels):
@@ -57,7 +60,7 @@ class UNet(nn.Module):
     
     def up_block(self, in_channels, out_channels):
         return nn.Sequential(
-            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
             nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
             nn.InstanceNorm2d(out_channels),
             nn.ReLU(inplace=True)
