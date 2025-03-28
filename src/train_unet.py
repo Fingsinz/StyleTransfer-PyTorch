@@ -4,13 +4,14 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
+from torchvision.utils import save_image
 from PIL import Image
 import swanlab
 from tqdm import tqdm
 
 from models.networks import VGG19_3_8_17_26
 from models.unet_model import UNet
-from utils.utils import gram_matrix
+from utils.utils import gram_matrix, check_dir, save_model
 
 def train():
     transform = transforms.Compose([
@@ -72,10 +73,13 @@ def train():
             
         if (step + 1) == config["epochs"]:
             # 保存生成图像
-            save_image(output.clamp(0, 1), f"run2_output_{step}.png")
+            save_path = check_dir("../output/unet/")
+            save_image(output.clamp(0,1), f"{save_path}unet_transformed.png")
 
     print("Training completed!")
-    save_model(generator, target_dir="models", model_name="test_model2.pth")
+
+    model_path = check_dir("../output/unet/")
+    save_model(generator, model_path, "unet_model.pth")
 
 def test():
     # 初始化网络
@@ -85,7 +89,8 @@ def test():
     output = generated.clone().detach().cpu().squeeze()
     output = output * torch.tensor([0.229, 0.224, 0.225]).view(3,1,1)
     output += torch.tensor([0.485, 0.456, 0.406]).view(3,1,1)
-    save_image(output.clamp(0,1), f"run2_test.png")
+    save_path = check_dir("../output/unet/")
+    save_image(output.clamp(0,1), f"{save_path}run2_test.png")
 
 
 config= {
@@ -94,7 +99,7 @@ config= {
     "style_path": "style2.jpg",
     "epochs": 500,
     "content_weight": 1,       # 内容损失权重
-    "style_weight": 50       # 风格损失权重
+    "style_weight": 1e6       # 风格损失权重
 }
 
 if __name__ == "__main__":
