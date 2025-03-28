@@ -1,4 +1,5 @@
 import os
+import time
 import sys
 import torch
 from PIL import Image
@@ -66,6 +67,10 @@ if __name__ == "__main__":
     load_model(load_metanet, './metanet_100.pth')
     load_metanet.to(Config.device)
     
+    start = time.perf_counter()
     one_image_transfer(content_path=content_img_path, style_path=style_img_path,
                        model_vgg=vgg16, model_transform=load_transform_net, metanet=load_metanet)
+    end = time.perf_counter()
+    print(f"[INFO] 生成图片用时：{end - start} 秒")
+
     
