@@ -32,10 +32,10 @@ class Conv2D_NoTrain(nn.Module):
              ', stride={stride}')
         return s.format(**self.__dict__)
 
-class VGG_Pretrained(nn.Module):
+class VGG16_Pretrained(nn.Module):
     """用于提取任意特征的预训练 VGG 模型"""
     def __init__(self, layer_ids):
-        super(VGG_Pretrained, self).__init__()
+        super(VGG16_Pretrained, self).__init__()
         self.features = models.vgg16(weights=models.VGG16_Weights.IMAGENET1K_V1).features
         self.layer_ids = set(layer_ids)
                  
@@ -50,11 +50,11 @@ class VGG_Pretrained(nn.Module):
                 outputs.append(x)
         return outputs
 
-class VGG_3_8_15_22(nn.Module):
+class VGG16_3_8_15_22(nn.Module):
     """3, 8, 15, 22 层的预训练 VGG 模型"""
     def __init__(self):
-        super(VGG_3_8_15_22, self).__init__()
-        self.features = VGG_Pretrained([3, 8, 15, 22])
+        super(VGG16_3_8_15_22, self).__init__()
+        self.features = VGG16_Pretrained([3, 8, 15, 22])
        
     def forward(self, x):
         return self.features(x)

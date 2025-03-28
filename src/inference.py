@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import utils.config as Config
-from models.networks import VGG_3_8_15_22
+from models.networks import VGG16_3_8_15_22
 from models.MetaNet_model import TransformNet, MetaNet
 from utils.utils import mean_std, denormalize, check_dir, load_model
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         print(f"[ERROR] {content_img_path} or {style_img_path} not exist")
         exit()
     
-    vgg16 = VGG_3_8_15_22().to(Config.device).eval()
+    vgg16 = VGG16_3_8_15_22().to(Config.device).eval()
     
     load_transform_net = TransformNet(Config.get_base()).to(Config.device)
     load_model(load_transform_net, './transform_net_100.pth')

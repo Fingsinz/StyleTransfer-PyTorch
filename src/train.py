@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from models.networks import VGG_3_8_15_22
+from models.networks import VGG16_3_8_15_22
 from models.MetaNet_model import TransformNet, MetaNet
 
 from data.ImageDataset import ImageDataset
@@ -164,7 +164,7 @@ if __name__ == '__main__':
             description="MetaNet demo",
         )
     
-    vgg16 = VGG_3_8_15_22().eval()
+    vgg16 = VGG16_3_8_15_22().eval()
     transform_net = TransformNet(Config.get_base()).to(Config.device)
     metanet = MetaNet(transform_net.get_param_dict()).to(Config.device)
     
