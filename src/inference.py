@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 import utils.config as Config
 from models.networks import VGG16_3_8_15_22
-from models.MetaNet_model import TransformNet, MetaNet
+from models.metanet_model import TransformNet, MetaNet
 from utils.utils import mean_std, denormalize, check_dir, load_model
 
 def one_image_transfer(content_path, style_path, model_vgg, model_transform, metanet):

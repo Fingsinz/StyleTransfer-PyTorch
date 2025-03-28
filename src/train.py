@@ -9,9 +9,9 @@ import torch
 from torch.utils.data import DataLoader
 
 from models.networks import VGG16_3_8_15_22
-from models.MetaNet_model import TransformNet, MetaNet
+from models.metanet_model import TransformNet, MetaNet
 
-from data.ImageDataset import ImageDataset
+from data.image_dataset import ImageDataset
 import utils.config as Config
 from utils.utils import mean_std, denormalize, create_grid, save_model, check_dir
 

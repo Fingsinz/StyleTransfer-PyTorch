@@ -10,7 +10,7 @@ import seaborn as sns
 
 from utils.utils import calculate_ssim, calculate_psnr
 from models.networks import ResNet18_Pretrained
-from data.ImageDataset import StyleImageDataset
+from data.image_dataset import StyleImageDataset
 import utils.config as Config
 
 class Scorer:

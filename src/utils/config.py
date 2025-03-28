@@ -2,7 +2,7 @@ import yaml
 import torch
 import torch.optim as optim
 
-from data.ImageDataset import ImageDataset, data_transform
+from data.image_dataset import ImageDataset, data_transform
 
 def load_config(config_path):
     with open(config_path, 'r', encoding='utf-8') as f:
