@@ -4,6 +4,12 @@ import numpy as np
 from skimage.metrics import structural_similarity as ssim
 from typing import Tuple, Dict, List
 
+def gram_matrix(feature):
+    b, c, h, w = feature.size()
+    features = feature.view(b * c, h * w)
+    gram = torch.mm(features, features.t())
+    return gram.div(b * c * h * w)
+
 def mean_std(features) -> torch.Tensor:
     """输入 VGG16 计算的四个特征，输出每张特征图的均值和标准差，长度为特征拼接"""
     mean_std_features = []
