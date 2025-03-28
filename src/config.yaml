@@ -29,7 +29,7 @@ test:
 
 data:
   # 内容数据集路径
-  content_dir: "../dataset/coco2017_100"
+  content_dir: "../datasets/coco2017_100"
   # 风格数据集路径
-  style_dir: "../dataset/WikiArt2_100"
+  style_dir: "../datasets/WikiArt2_100"
   num_workers: 4
