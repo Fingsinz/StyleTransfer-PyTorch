@@ -2,6 +2,7 @@ import os
 import torch
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
+from typing import Tuple, Dict, List
 
 def mean_std(features) -> torch.Tensor:
     """输入 VGG16 计算的四个特征，输出每张特征图的均值和标准差，长度为特征拼接"""
@@ -68,3 +69,15 @@ def calculate_psnr(content: np.ndarray, transformed: np.ndarray) -> float:
     mse = np.mean((content - transformed) ** 2)
     psnr = 20 * np.log10(255 / np.sqrt(mse))
     return psnr 
+
+
+def find_classes(directory: str) -> Tuple[List[str], Dict[str, int]]:
+    """在目标目录中查找类文件夹名称，并创建类到索引的映射"""
+    # 1. 通过扫描目标目录获取类名
+    classes = sorted(entry.name for entry in os.scandir(directory) if entry.is_dir())
+    # 2. 如果找不到类名，则引发错误
+    if not classes:
+        raise FileNotFoundError(f"Couldn't find any classes in {directory}.")        
+    # 3. 创建索引标签的字典
+    class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
+    return classes, class_to_idx
