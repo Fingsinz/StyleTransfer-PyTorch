@@ -19,7 +19,7 @@ from utils.utils import calculate_ssim, calculate_psnr
 from models.networks import ResNet18_Pretrained
 from data.image_dataset import StyleImageDataset
 import utils.config as Config
-from utils.utils import check_dir
+from utils.utils import check_dir, save_model
 
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
 plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
@@ -80,10 +80,10 @@ class Scorer:
         dataset = StyleImageDataset(data_path, transform=self.transform)
         train_dataset, test_dataset = \
             Data.random_split(dataset,
-                              [int(len(dataset) * 0.9),
-                               len(dataset) - int(len(dataset) * 0.9)])
-        train_loader = Data.DataLoader(train_dataset, batch_size=32, shuffle=True)
-        test_loader = Data.DataLoader(test_dataset, batch_size=32, shuffle=True)
+                              [int(len(dataset) * 0.8),
+                               len(dataset) - int(len(dataset) * 0.8)])
+        train_loader = Data.DataLoader(train_dataset, batch_size=16, shuffle=True)
+        test_loader = Data.DataLoader(test_dataset, batch_size=16, shuffle=True)
         train_style_classification(self.model, train_loader, test_loader)
         self.model.eval()
         print(f"[INFO] Training completed")
@@ -207,12 +207,12 @@ if __name__ == '__main__':
         model_path = eval_config["model"].get("model_path")
         scorer.initialize_by_model(model_path=model_path)
         
-    style_score, content_score = scorer.get_score(content_path, style_path, transforms_path)
+    style_score, content_score = scorer.get_score(content_path, style_path, transformed_path)
 
-    print(f"原始图像 {content_path} | 风格图像 {style_path} | 迁移后图像 {transforms_path}")
-    print(f"迁移后图像风格为{style}")
-    print("风格评分: {:.4f}, 内容评分: {:.4f}, 平均评分: {:.4f}"
+    print(f"[INFO] 原始图像 {content_path} | 风格图像 {style_path} | 迁移后图像 {transformed_path}")
+    print(f"[INFO] 迁移后图像风格为{style}")
+    print("[INFO] 风格评分: {:.4f}, 内容评分: {:.4f}, 平均评分: {:.4f}"
           .format(style_score, content_score, (0.5 * style_score + 0.5 * content_score)))
     
-    scorer.generate_html_report(content_path, style_path, transforms_path, style_score, content_score)
+    scorer.generate_html_report(content_path, style_path, transformed_path, style_score, content_score)
     
