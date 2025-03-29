@@ -1,7 +1,7 @@
-# config.yaml 用于配置 MetaNet 的超参数
+# config.yaml 模板
 
 swanlab:
-  enable: false
+  enable: True
 
 model_save_path: "../results/models"
 
@@ -9,7 +9,7 @@ training:
   # 训练轮数
   epochs: 100
   # 批次大小
-  batch_size: 4
+  batch_size: 8
   # 学习率
   learning_rate: 0.001
   # 风格权重
@@ -19,7 +19,7 @@ training:
   # 梯度平滑权重
   tv_weight: 0.000001
   # 间隔多少轮记录一次
-  record_per_epochs: 5
+  record_per_epochs: 10
 
   base: 32
 
