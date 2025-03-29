@@ -4,8 +4,6 @@ import torch.nn.functional as F
 import torchvision.models as models
 from torchvision import transforms
 
-from tqdm import tqdm
-
 from utils.utils import save_model
 import utils.config as Config
 
@@ -105,27 +103,11 @@ class ResNet18_Pretrained(nn.Module):
         super(ResNet18_Pretrained, self).__init__()
         self.features = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
         self.fc = nn.Linear(1000, num_classes)
-        self.optimizer = torch.optim.Adam(self.parameters(), lr=1e-4)
-        self.criterion = nn.CrossEntropyLoss()
             
     def forward(self, x):
         x = self.features(x)
         x = self.fc(x)
         return x
-    
-    def fine_tuning_model(self, epochs, train_loader):
-        """微调模型"""
-        self.to(Config.device)
-        for epoch in range(epochs):
-            for images, labels in tqdm(train_loader, desc=f"{epoch + 1} / {epochs}"):
-                images = images.to(Config.device)
-                labels = labels.to(Config.device)
-                output = self.forward(images)
-                loss = self.criterion(output, labels)
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-        save_model(self, '../output/', 'ResNet18_Pretrained.pth')
     
 def ConvLayer(in_channels, out_channels, kernel_size=3, stride=1, upsample=None,
               instance_norm=True, relu=True, trainable=False):
