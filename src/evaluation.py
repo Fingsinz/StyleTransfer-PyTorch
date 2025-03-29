@@ -185,7 +185,11 @@ if __name__ == '__main__':
     style_path = sys.argv[2]
     transformed_path = sys.argv[3]
     
-    with open("./evaluation.yaml", 'r', encoding='utf-8') as f:
+    if not os.path.exists("./config_evaluation.yaml"):
+        print("[ERROR] evaluation.yaml 不存在")
+        exit()
+
+    with open("./config_evaluation.yaml", 'r', encoding='utf-8') as f:
         eval_config = yaml.safe_load(f)
     
     class_names = eval_config["model"].get("classes")
