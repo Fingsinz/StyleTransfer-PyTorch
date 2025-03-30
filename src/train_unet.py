@@ -76,7 +76,7 @@ def train(is_swanlab=False):
             
         if (step + 1) == config["epochs"]:
             # 保存生成图像
-            save_path = check_dir("../output/unet/")
+            save_path = check_dir("../output/")
             output = generated.clone().detach().cpu().squeeze()
             output = output * torch.tensor([0.229, 0.224, 0.225]).view(3,1,1)
             output += torch.tensor([0.485, 0.456, 0.406]).view(3,1,1)  
@@ -92,7 +92,7 @@ def test(generator, content_img):
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
-    generator = load_model(generator, "../output/unet/unet_model.pth")
+    generator = load_model(generator, f"../output/unet/unet_{config['style']}_model.pth")
     
     content = transform(content_img).unsqueeze(0).to(config["device"])
     generated = generator(content)
@@ -107,7 +107,7 @@ config= {
     "device": torch.device("cuda" if torch.cuda.is_available() else "cpu"),
     "content_path": "",
     "style_path": "",
-    "style": "chinese-art",
+    "style": "monet",
     "epochs": 500,
     "content_weight": 1,       # 内容损失权重
     "style_weight": 1e6       # 风格损失权重
