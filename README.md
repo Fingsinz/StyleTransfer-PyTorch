@@ -73,8 +73,11 @@ cd ./src
 修改 `config_example.yaml` 进行参数配置，然后运行以下命令进行打分:
 
 ```bash
-python evaluation.py path/to/content_image path/to/style_image path/to/result_image
+python evaluation.py path/to/content_image path/to/style_image path/to/result_image test_model
 ```
+
+- `path/to/content_image`、`path/to/style_image`、`path/to/result_image` 分别为对应的图片。
+- `test_model` 为需要评估的模型。
 
 #### 其他风格打分
 
@@ -89,5 +92,8 @@ cd ./src
 修改 `config_example.yaml` 进行参数配置，然后运行以下命令进行打分:
 
 ```bash
-python evaluation.py path/to/content_image path/to/style_image path/to/result_image
+python evaluation.py path/to/content_image path/to/style_image path/to/result_image test_model
 ```
+
+- `path/to/content_image`、`path/to/style_image`、`path/to/result_image` 分别为对应的图片。
+- `test_model` 为需要评估的模型。

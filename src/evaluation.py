@@ -56,7 +56,7 @@ def train_style_classification(model, train_loader, test_loader, epochs=10):
     save_model(model, '../output/', 'ResNet18_Pretrained.pth')
 
 class Scorer:
-    def __init__(self, num_classes, target_class, class_names):
+    def __init__(self, num_classes, target_class, class_names, test_model):
         self.num_classes = num_classes
         self.target_class = target_class
         self.model = ResNet18_Pretrained(num_classes=num_classes).to(Config.device)
@@ -67,7 +67,8 @@ class Scorer:
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
         
-        self.class_names = class_names 
+        self.class_names = class_names
+        self.test_model = test_model 
     
     def initialize_by_model(self, model_path):
         print(f"[INFO] Loading model from {model_path}")
@@ -125,6 +126,7 @@ class Scorer:
         now_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
         output_path=f"./report_{now_time}.html"
         style_display = self.target_class.replace('-', ' ').title()
+        test_model = self.test_model.title()
         html_template = f"""
             <!DOCTYPE html>
             <html>
@@ -161,6 +163,7 @@ class Scorer:
                     
                     <div class="style-header">
                         <h2>目标艺术风格：{style_display}</h2>
+                        <h2>测试迁移模型：{test_model}</h2>
                     </div>
                     
                     <div class="metrics">
@@ -184,6 +187,7 @@ if __name__ == '__main__':
     content_path = sys.argv[1]
     style_path = sys.argv[2]
     transformed_path = sys.argv[3]
+    use_model = sys.argv[4]
     
     if not os.path.exists("./config_evaluation.yaml"):
         print("[ERROR] evaluation.yaml 不存在")
@@ -201,7 +205,7 @@ if __name__ == '__main__':
         print("[ERROR] 参数错误")
         exit()
     
-    scorer = Scorer(4, target_class=style, class_names=class_names)
+    scorer = Scorer(4, target_class=style, class_names=class_names, test_model=use_model)
     
     is_train = eval_config["model"].get("model_train")
     if is_train == True:
