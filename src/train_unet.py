@@ -13,9 +13,9 @@ from tqdm import tqdm
 
 from models.networks import VGG19_3_8_17_26
 from models.unet_model import UNet
-from utils.utils import gram_matrix, check_dir, save_model
+from utils.utils import gram_matrix, check_dir, save_model, load_model
 
-def train():
+def train(is_swanlab=False):
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -64,41 +64,50 @@ def train():
         optimizer.step()
         
         if (step + 1) % 50 == 0 or (step + 1) == config["epochs"]:
-            swanlab.log({"unet_content_loss": content_loss,
-                         "unet_style_loss": style_loss,
-                         "unet_total_loss": total_loss.item()})
-            output = generated.clone().detach().cpu().squeeze()
-            output = output * torch.tensor([0.229, 0.224, 0.225]).view(3,1,1)
-            output += torch.tensor([0.485, 0.456, 0.406]).view(3,1,1)
-            image = swanlab.Image(output.clamp(0,1), caption="example")
-            swanlab.log({"Output": image})
+            if is_swanlab:
+                swanlab.log({"unet_content_loss": content_loss,
+                            "unet_style_loss": style_loss,
+                            "unet_total_loss": total_loss.item()})
+                output = generated.clone().detach().cpu().squeeze()
+                output = output * torch.tensor([0.229, 0.224, 0.225]).view(3,1,1)
+                output += torch.tensor([0.485, 0.456, 0.406]).view(3,1,1)  
+                image = swanlab.Image(output.clamp(0,1), caption="example")
+                swanlab.log({"Output": image})
             
         if (step + 1) == config["epochs"]:
             # 保存生成图像
             save_path = check_dir("../output/unet/")
-            save_image(output.clamp(0,1), f"{save_path}unet_transformed.png")
+            output = generated.clone().detach().cpu().squeeze()
+            output = output * torch.tensor([0.229, 0.224, 0.225]).view(3,1,1)
+            output += torch.tensor([0.485, 0.456, 0.406]).view(3,1,1)  
+            save_image(output.clamp(0,1), f"{save_path}unet_{config['style']}.png")
 
     print("Training completed!")
 
     model_path = check_dir("../output/unet/")
-    save_model(generator, model_path, "unet_model.pth")
+    save_model(generator, model_path, f"unet_{config['style']}_model.pth")
 
-def test():
-    # 初始化网络
-    generator = load_model(target_dir="models", model_name="test_model2.pth").to(config["device"])
-
-    generated = generator(content_img)
+def test(generator, content_img):
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    generator = load_model(generator, "../output/unet/unet_model.pth")
+    
+    content = transform(content_img).unsqueeze(0).to(config["device"])
+    generated = generator(content)
+    
     output = generated.clone().detach().cpu().squeeze()
     output = output * torch.tensor([0.229, 0.224, 0.225]).view(3,1,1)
-    output += torch.tensor([0.485, 0.456, 0.406]).view(3,1,1)
-    save_path = check_dir("../output/unet/")
-    save_image(output.clamp(0,1), f"{save_path}run2_test.png")
-
+    output += torch.tensor([0.485, 0.456, 0.406]).view(3,1,1)  
+    save_path = check_dir("../output/")
+    save_image(output.clamp(0,1), f"{save_path}unet_{config['style']}_test.png")
 
 config= {
     "device": torch.device("cuda" if torch.cuda.is_available() else "cpu"),
     "content_path": "",
     "style_path": "",
+    "style": "chinese-art",
     "epochs": 500,
     "content_weight": 1,       # 内容损失权重
     "style_weight": 1e6       # 风格损失权重
@@ -106,7 +115,8 @@ config= {
 
 if __name__ == "__main__":
     config["content_path"] = sys.argv[1]
-    config["style_path"] = sys.argv[2]
+    config["style_path"] = sys.argv[2] if len(sys.argv) > 2 else ""
+    
     is_swanlab = sys.argv[3] if len(sys.argv) > 3 else False
 
     if is_swanlab:
@@ -116,11 +126,11 @@ if __name__ == "__main__":
             description="vgg + U-Net(优化后) 进行特定风格迁移",
             config=config
         )
-
-    if not os.path.exists(config["content_path"]) or not os.path.exists(config["style_path"]):
-        print(f"[ERROR] {config['content_path']} or {config['style_path']} 不存在")
-        exit()
     
-    train()
-    # test()
+    if config["style_path"] != "":
+        train(is_swanlab)
+    else:
+        content_img = Image.open(config["content_path"]).convert('RGB')
+        generator = UNet().to(config["device"])
+        test(generator, content_img)
 
