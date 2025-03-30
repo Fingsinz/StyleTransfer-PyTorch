@@ -41,8 +41,8 @@ def one_image_transfer(content_path, style_path, model_vgg, model_transform, met
     transformed_pil = transformed_pil.resize((content_img_width, content_img_height), Image.LANCZOS)
 
     out_dir = check_dir('../output')
-    filename = os.path.basename(content_path).split('.')[0] + \
-        os.path.basename(style_path).split('.')[0] + '.png'
+    filename = os.path.basename(style_path).split('.')[0] + '_' + \
+        os.path.basename(content_path).split('.')[0] + '.png'
 
     output_path = f"./{out_dir}/{filename}"
     transformed_pil.save(output_path)
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     vgg16 = VGG16_3_8_15_22().to(Config.device).eval()
     
     load_transform_net = TransformNet(Config.get_base()).to(Config.device)
-    load_model(load_transform_net, './transform_net_100.pth')
+    load_model(load_transform_net, './transform_100.pth')
     load_transform_net.to(Config.device)
     
     load_metanet = MetaNet(load_transform_net.get_param_dict()).to(Config.device)
