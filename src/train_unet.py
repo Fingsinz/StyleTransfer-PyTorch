@@ -1,4 +1,6 @@
 from pathlib import Path
+import os
+import sys
 
 import torch
 import torch.nn as nn
@@ -95,20 +97,29 @@ def test():
 
 config= {
     "device": torch.device("cuda" if torch.cuda.is_available() else "cpu"),
-    "content_path": "content1.JPEG",
-    "style_path": "style2.jpg",
+    "content_path": "",
+    "style_path": "",
     "epochs": 500,
     "content_weight": 1,       # 内容损失权重
     "style_weight": 1e6       # 风格损失权重
 }
 
 if __name__ == "__main__":
-    run = swanlab.init(
-        project="StyleTransfer",
-        experiment_name="vgg_unet",
-        description="vgg + U-Net(优化后) 进行特定风格迁移",
-        config=config
-    )
+    config["content_path"] = sys.argv[1]
+    config["style_path"] = sys.argv[2]
+    is_swanlab = sys.argv[3] if len(sys.argv) > 3 else False
+
+    if is_swanlab:
+        run = swanlab.init(
+            project="StyleTransfer",
+            experiment_name="vgg_unet",
+            description="vgg + U-Net(优化后) 进行特定风格迁移",
+            config=config
+        )
+
+    if not os.path.exists(config["content_path"]) or not os.path.exists(config["style_path"]):
+        print(f"[ERROR] {config['content_path']} or {config['style_path']} 不存在")
+        exit()
     
     train()
     # test()
