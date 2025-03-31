@@ -8,6 +8,28 @@
 
 网页文档: [https://fingsinz.github.io/StyleTransfer/](https://fingsinz.github.io/StyleTransfer/)
 
+本项目结构：
+
+```
+StyleTransfer-PyTorch/
+├── README.md                   # README
+├── datasets/                   # 训练数据集
+├── script/                     # 获取数据集的脚本
+├── src/                        # 源码
+│   ├── data/                   # 数据集加载模块
+│   ├── models/                 # 模型定义模块
+│   ├── utils/                  # 工具模块
+│   ├── config.yaml             # 训练模块配置文件
+│   ├── config_example.yaml     # 训练模块配置文件示例
+│   ├── config_evaluation.yaml  # 评测模块配置文件
+│   ├── evaluation.py           # 评测模块
+│   ├── inference.py            # 迁移程序
+│   ├── train.py                # 训练程序
+│   ├── train_cnn.py            # 基于 CNN 的风格迁移实现
+│   └── train_unet.py           # 基于 U-Net 的风格迁移实现
+└── requirements.txt            # 环境依赖
+```
+
 ## 快速上手
 
 ### 克隆仓库
