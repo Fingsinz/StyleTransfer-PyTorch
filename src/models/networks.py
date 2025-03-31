@@ -47,6 +47,12 @@ class VGG16_Pretrained(nn.Module):
             if idx in self.layer_ids:
                 outputs.append(x)
         return outputs
+    
+    def __len__(self):
+        return len(self.features)
+    
+    def __getitem__(self, idx):
+        return self.features[idx]
 
 
 class VGG19_Pretrained(nn.Module):
@@ -66,6 +72,12 @@ class VGG19_Pretrained(nn.Module):
             if idx in self.layer_ids:
                 outputs.append(x)
         return outputs
+    
+    def __len__(self):
+        return len(self.features)
+    
+    def __getitem__(self, idx):
+        return self.features[idx]
 
 class VGG16_3_8_15_22(nn.Module):
     """3, 8, 15, 22 层的预训练 VGG 模型"""
