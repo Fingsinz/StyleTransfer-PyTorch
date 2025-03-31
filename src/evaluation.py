@@ -126,7 +126,7 @@ class Scorer:
         now_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
         output_path=f"./report_{now_time}.html"
         style_display = self.target_class.replace('-', ' ').title()
-        test_model = self.test_model.title()
+        test_model = self.test_model
         html_template = f"""
             <!DOCTYPE html>
             <html>
