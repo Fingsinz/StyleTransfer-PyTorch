@@ -3,8 +3,9 @@ from collections import defaultdict
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .networks import ConvLayer, ResidualBlock_2Conv_NoTrain, Conv2D_NoTrain
+from models.networks import ConvLayer, ResidualBlock_2Conv_NoTrain, Conv2D_NoTrain
 from utils.utils import mean_std
+from models.attention import ChannelAttention
 
 class TransformNet(nn.Module):
     """图像转换网络"""
@@ -73,6 +74,7 @@ class MetaNet(nn.Module):
         super(MetaNet, self).__init__()
         self.param_num = len(param_dict)
         self.hidden = nn.Linear(1920, 128 * self.param_num)
+        self.attention = ChannelAttention(num_groups=self.param_num) # 注意力层
         self.fc_dict = {}
         for i, (name, params) in enumerate(param_dict.items()):
             self.fc_dict[name] = i
@@ -80,6 +82,7 @@ class MetaNet(nn.Module):
             
     def forward(self, mean_std_features):
         hidden = F.relu(self.hidden(mean_std_features))
+        hidden = self.attention(hidden) # 注意力处理
         filters = {}
         for name, i in self.fc_dict.items():
             fc = getattr(self, 'fc{}'.format(i + 1))
