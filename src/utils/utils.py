@@ -71,11 +71,14 @@ def calculate_ssim(content: np.ndarray, transformed: np.ndarray) -> float:
     return np.mean(ssim_score)
 
 def calculate_psnr(content: np.ndarray, transformed: np.ndarray) -> float:
-    """计算 PSNR 值，[0,255]"""
+    """计算 PSNR 值"""
     mse = np.mean((content - transformed) ** 2)
-    psnr = 20 * np.log10(255 / np.sqrt(mse))
+    
+    if content.max() > 1:
+        psnr = 20 * np.log10(255 / np.sqrt(mse))
+    else:
+        psnr = 20 * np.log10(1 / np.sqrt(mse))
     return psnr 
-
 
 def find_classes(directory: str) -> Tuple[List[str], Dict[str, int]]:
     """在目标目录中查找类文件夹名称，并创建类到索引的映射"""
