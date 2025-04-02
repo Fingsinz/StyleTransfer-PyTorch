@@ -98,6 +98,7 @@ def train(model_vgg, model_transform, metanet):
             optimizer.step()
                     
             content_loss_sum += content_loss.item()
+            style_loss_sum += style_loss.item()
             
             batch += 1
 
