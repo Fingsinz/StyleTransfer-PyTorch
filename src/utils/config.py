@@ -19,6 +19,9 @@ def get_epochs(training_config=config['training']):
 def get_lr(training_config=config['training']):
     return training_config.get('lr', 1e-3)
 
+def get_style_interval(training_config=config['training']):
+    return training_config.get('style_interval', 20)
+
 def get_training_weight(training_config=config['training']):
     return [training_config.get('style_weight', 50),
             training_config.get('content_weight', 1),

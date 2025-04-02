@@ -17,10 +17,15 @@ from utils.utils import mean_std, denormalize, create_grid, save_model, check_di
 
 import swanlab
 
+device = Config.device
+style_weight, content_weight, tv_weight = Config.get_training_weight()
+style_interval = Config.get_style_interval()
+epochs = Config.get_epochs()
+
 def train(model_vgg, model_transform, metanet):
-    model_vgg = model_vgg.to(Config.device)
-    model_transform = model_transform.to(Config.device)
-    metanet = metanet.to(Config.device)
+    model_vgg = model_vgg.to(device)
+    model_transform = model_transform.to(device)
+    metanet = metanet.to(device)
     
     content_dataset, style_dataset = Config.get_data()
     
@@ -47,10 +52,8 @@ def train(model_vgg, model_transform, metanet):
     metanet.train()
     model_transform.train()
     
-    style_weight, content_weight, tv_weight = Config.get_training_weight()
     record_per_epochs = Config.get_record_per_epochs()
     test_batch = Config.get_test_batch()
-    epochs = Config.get_epochs()
     
     is_save = False if Config.get_model_save() == '' else True
     now_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
@@ -63,9 +66,9 @@ def train(model_vgg, model_transform, metanet):
         batch = 0
         
         for content in tqdm(content_data_loader, desc=f"{epoch + 1} / {epochs}"):
-            if batch % 20 == 0:
+            if batch % style_interval == 0:
                 random_idx = random.randint(0, len(style_dataset) - 1)
-                style_image = style_dataset[random_idx].unsqueeze(0).to(Config.device)
+                style_image = style_dataset[random_idx].unsqueeze(0).to(device)
                 style_features = model_vgg(style_image)
                 style_mean_std = mean_std(style_features)
             
@@ -77,7 +80,7 @@ def train(model_vgg, model_transform, metanet):
             optimizer.zero_grad()
             weights = metanet(style_mean_std)
             model_transform.set_weights(weights, 0)
-            content = content.to(Config.device)
+            content = content.to(device)
             output = model_transform(content)
                     
             content_features = model_vgg(content)
@@ -95,20 +98,17 @@ def train(model_vgg, model_transform, metanet):
             total_loss.backward()
             optimizer.step()
                     
-            max_value = max([x.max().item() for x in weights.values()])
-                    
             content_loss_sum += content_loss.item()
             style_loss_sum += style_loss.item()
-            avg_max_value += max_value
             
             batch += 1
 
         if Config.is_swanlab:        
             swanlab.log({"content_loss": content_loss_sum / len(content_data_loader),
-                         "style_loss": style_loss_sum / len(content_data_loader),
-                         "max_value": avg_max_value / len(content_data_loader)})
-
-        print(f"{epoch + 1} / {epochs} | \
+                         "style_loss": style_loss_sum / len(content_data_loader)})
+            
+        _now_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
+        print(f"{epoch + 1} / {epochs} | {_now_time} | \
             content_loss: {content_loss_sum / len(content_data_loader)} | \
                 style_loss: {style_loss_sum / len(content_data_loader)} | \
                     max_value: {avg_max_value / len(content_data_loader)} ")
@@ -126,7 +126,7 @@ def train(model_vgg, model_transform, metanet):
 def val_in_training(content_dataset, style_dataset, model_vgg, model_transform, metanet,
                     test_batch, epoch, val_path=""):
     random_idx = random.randint(0, len(style_dataset) - 1)
-    style_tensor = style_dataset[random_idx].unsqueeze(0).to(Config.device)
+    style_tensor = style_dataset[random_idx].unsqueeze(0).to(device)
     
     with torch.inference_mode():
         features = model_vgg(style_tensor)
@@ -135,7 +135,7 @@ def val_in_training(content_dataset, style_dataset, model_vgg, model_transform, 
         model_transform.set_weights(weights)
     
         content_images = torch.stack([random.choice(content_dataset)
-                                      for _ in range(test_batch)]).to(Config.device)
+                                      for _ in range(test_batch)]).to(device)
         transformed_images = model_transform(content_images)
     
         style_denorm = denormalize(style_tensor).squeeze(0)
@@ -160,13 +160,21 @@ if __name__ == '__main__':
     if Config.is_swanlab:
         swanlab.init(
             project="StyleTransfer",
-            experiment_name="MetaNet_demo_30",
+            experiment_name="MetaNet_demo",
             description="MetaNet demo",
+            config={
+                "device": device,
+                "epochs": epochs,
+                "content_weight": content_weight,
+                "style_weight": style_weight,
+                "tv_weight": tv_weight,
+                "style_interval": style_interval,
+            }
         )
     
     vgg16 = VGG16_3_8_15_22().eval()
-    transform_net = TransformNet(Config.get_base()).to(Config.device)
-    metanet = MetaNet(transform_net.get_param_dict()).to(Config.device)
+    transform_net = TransformNet(Config.get_base()).to(device)
+    metanet = MetaNet(transform_net.get_param_dict()).to(device)
     
     train(vgg16, transform_net, metanet)
     

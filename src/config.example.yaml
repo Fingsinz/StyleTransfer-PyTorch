@@ -18,6 +18,8 @@ training:
   content_weight: 1
   # 梯度平滑权重
   tv_weight: 0.000001
+  # 间隔多少 batch 换一张风格照片
+  style_interval: 20
   # 间隔多少轮记录一次
   record_per_epochs: 10
 
