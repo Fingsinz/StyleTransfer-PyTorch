@@ -13,3 +13,6 @@ datasets/*
 
 # 生成迁移图像文件夹、模型文件夹
 output/*
+
+# 临时测试 jpg
+src/*.jpg
