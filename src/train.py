@@ -62,7 +62,6 @@ def train(model_vgg, model_transform, metanet):
     for epoch in range(epochs):
         content_loss_sum = 0
         style_loss_sum = 0
-        avg_max_value = 0
         batch = 0
         
         for content in tqdm(content_data_loader, desc=f"{epoch + 1} / {epochs}"):
@@ -99,7 +98,6 @@ def train(model_vgg, model_transform, metanet):
             optimizer.step()
                     
             content_loss_sum += content_loss.item()
-            style_loss_sum += style_loss.item()
             
             batch += 1
 
@@ -107,11 +105,10 @@ def train(model_vgg, model_transform, metanet):
             swanlab.log({"content_loss": content_loss_sum / len(content_data_loader),
                          "style_loss": style_loss_sum / len(content_data_loader)})
             
-        _now_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
+        _now_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print(f"{epoch + 1} / {epochs} | {_now_time} | \
             content_loss: {content_loss_sum / len(content_data_loader)} | \
-                style_loss: {style_loss_sum / len(content_data_loader)} | \
-                    max_value: {avg_max_value / len(content_data_loader)} ")
+                style_loss: {style_loss_sum / len(content_data_loader)}")
         
         if (epoch + 1) % record_per_epochs == 0:
             if is_save:
