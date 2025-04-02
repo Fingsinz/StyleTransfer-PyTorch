@@ -53,7 +53,7 @@ def train_style_classification(model, train_loader, test_loader, epochs=10):
                 correct += (predicted == labels).sum().item()
             accuracy = correct / total
             print(f"Epoch [{epoch + 1}/{epochs}], Accuracy: {accuracy:.4f}")
-    save_model(model, '../output/', 'ResNet18_Pretrained.pth')
+    save_model(model, '../output/', f'ResNet18_fix_{accuracy}.pth')
 
 class Scorer:
     def __init__(self, num_classes, target_class, class_names, test_model):
@@ -184,11 +184,16 @@ class Scorer:
         print(f"[INFO] 已生成HTML报告：{output_path}")
 
 if __name__ == '__main__':
+    
+    if len(sys.argv) < 5:
+        print("[ERROR] 使用: python evaluation.py [content_path] [style_path] [transformed_path] [use_model]")
+        exit()
+        
     content_path = sys.argv[1]
     style_path = sys.argv[2]
     transformed_path = sys.argv[3]
     use_model = sys.argv[4]
-    
+
     if not os.path.exists("./config_evaluation.yaml"):
         print("[ERROR] evaluation.yaml 不存在")
         exit()
