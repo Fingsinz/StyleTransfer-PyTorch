@@ -52,7 +52,7 @@ def train(model_vgg, model_transform, metanet):
     # 使用余弦退火学习率调度器
     schedulaer = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100)
     # 增加梯度裁剪防止梯度爆炸
-    torch.nn.utils.clip_grad_norm(trainable_params.values(), max_norm=1.0)
+    torch.nn.utils.clip_grad_norm_(trainable_params.values(), max_norm=1.0)
     
     metanet.train()
     model_transform.train()
@@ -100,7 +100,7 @@ def train(model_vgg, model_transform, metanet):
                     
             total_loss = content_loss + style_loss + tv_loss
             total_loss.backward()
-            torch.nn.utils.clip_grad_norm(trainable_params.values(), max_norm=1.0) # 梯度裁剪
+            torch.nn.utils.clip_grad_norm_(trainable_params.values(), max_norm=1.0) # 梯度裁剪
             
             optimizer.step()
             schedulaer.step()
