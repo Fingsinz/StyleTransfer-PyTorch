@@ -60,11 +60,11 @@ if __name__ == "__main__":
     vgg16 = VGG16_3_8_15_22().to(Config.device).eval()
     
     load_transform_net = TransformNet(Config.get_base()).to(Config.device)
-    load_model(load_transform_net, './transform_attention_epos=100_cw=1_sw=50_tvw=1e-6_interval=20.pth')
+    load_model(load_transform_net, './transform_epos=100_cw=1_sw=50_tvw=1e-6_interval=20.pth')
     load_transform_net.to(Config.device)
     
     load_metanet = MetaNet(load_transform_net.get_param_dict()).to(Config.device)
-    load_model(load_metanet, './metanet_attention_epos=100_cw=1_sw=50_tvw=1e-6_interval=20.pth')
+    load_model(load_metanet, './metanet_epos=100_cw=1_sw=50_tvw=1e-6_interval=20.pth')
     load_metanet.to(Config.device)
     
     if os.path.isfile(content_path) and os.path.isfile(style_path):
@@ -75,14 +75,18 @@ if __name__ == "__main__":
         print(f"[INFO] 生成图片用时：{end - start} 秒")
         exit()
     else:
+        total_seconds = 0
+        total_imgs = 0
         for content_img_path in os.listdir(content_path):
             for style_img_path in os.listdir(style_path):
+                total_imgs += 1
                 start = time.perf_counter()
                 one_image_transfer(content_path=f"{content_path}/{content_img_path}",
                                    style_path=f"{style_path}/{style_img_path}",
                                    model_vgg=vgg16, model_transform=load_transform_net, metanet=load_metanet)
                 end = time.perf_counter()
-                print(f"[INFO] 生成图片用时：{end - start} 秒")
+                total_seconds += end - start
+        print(f"[INFO] 生成 {total_imgs} 张图片平均用时：{total_seconds / total_imgs} 秒")
         exit()
 
 
