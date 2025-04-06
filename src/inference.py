@@ -8,21 +8,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import utils.config as Config
-from models.networks import VGG16_3_8_15_22
+from models.networks import VGG16_3_8_15_22, VGG19_3_8_17_26
 from models.metanet_model import TransformNet, MetaNet
 from utils.utils import mean_std, denormalize, check_dir, load_model
 
-def one_image_transfer(content_path, style_path, model_vgg, model_transform, metanet):
+def one_image_transfer(content_img_path, style_img_path, model_vgg, model_transform, metanet):
     preprocess = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
-    content_image = Image.open(content_path).convert('RGB')
+    content_image = Image.open(content_img_path).convert('RGB')
     content_tensor = preprocess(content_image).unsqueeze(0).to(Config.device)
     content_img_width, content_img_height = content_image.size
 
-    style_image = Image.open(style_path).convert('RGB')
+    style_image = Image.open(style_img_path).convert('RGB')
     style_tensor = preprocess(style_image).unsqueeze(0).to(Config.device)
 
     with torch.inference_mode():
@@ -41,12 +41,12 @@ def one_image_transfer(content_path, style_path, model_vgg, model_transform, met
     transformed_pil = transformed_pil.resize((content_img_width, content_img_height), Image.LANCZOS)
 
     out_dir = check_dir('../output')
-    filename = os.path.basename(style_path).split('.')[0] + '_' + \
-        os.path.basename(content_path).split('.')[0] + '.png'
+    filename = os.path.basename(style_img_path).split('.')[0] + '_' + \
+        os.path.basename(content_img_path).split('.')[0] + '.png'
 
     output_path = f"./{out_dir}/{filename}"
     transformed_pil.save(output_path)
-    print(f"[INFO] Result saved to {output_path}")
+    print(f'[INFO] "{content_img_path}" to "{style_img_path}". Result saved to {output_path}')
     
 if __name__ == "__main__":
     
@@ -57,20 +57,21 @@ if __name__ == "__main__":
         print(f"[ERROR] {content_path} or {style_path} not exist")
         exit()
     
-    vgg16 = VGG16_3_8_15_22().to(Config.device).eval()
+    vgg = VGG16_3_8_15_22().to(Config.device).eval()
+    # vgg = VGG19_3_8_17_26().to(Config.device).eval()
     
     load_transform_net = TransformNet(Config.get_base()).to(Config.device)
-    load_model(load_transform_net, './transform_epos=100_cw=1_sw=50_tvw=1e-6_interval=20.pth')
+    load_model(load_transform_net, '../results/transform_epos=100_cw=1_sw=50_tvw=1e-6_interval=20.pth')
     load_transform_net.to(Config.device)
     
     load_metanet = MetaNet(load_transform_net.get_param_dict()).to(Config.device)
-    load_model(load_metanet, './metanet_epos=100_cw=1_sw=50_tvw=1e-6_interval=20.pth')
+    load_model(load_metanet, '../results/metanet_epos=100_cw=1_sw=50_tvw=1e-6_interval=20.pth')
     load_metanet.to(Config.device)
     
     if os.path.isfile(content_path) and os.path.isfile(style_path):
         start = time.perf_counter()
         one_image_transfer(content_path=content_path, style_path=style_path,
-                           model_vgg=vgg16, model_transform=load_transform_net, metanet=load_metanet)
+                           model_vgg=vgg, model_transform=load_transform_net, metanet=load_metanet)
         end = time.perf_counter()
         print(f"[INFO] 生成图片用时：{end - start} 秒")
         exit()
@@ -81,9 +82,9 @@ if __name__ == "__main__":
             for style_img_path in os.listdir(style_path):
                 total_imgs += 1
                 start = time.perf_counter()
-                one_image_transfer(content_path=f"{content_path}/{content_img_path}",
-                                   style_path=f"{style_path}/{style_img_path}",
-                                   model_vgg=vgg16, model_transform=load_transform_net, metanet=load_metanet)
+                one_image_transfer(content_img_path=f"{content_path}/{content_img_path}",
+                                   style_img_path=f"{style_path}/{style_img_path}",
+                                   model_vgg=vgg, model_transform=load_transform_net, metanet=load_metanet)
                 end = time.perf_counter()
                 total_seconds += end - start
         print(f"[INFO] 生成 {total_imgs} 张图片平均用时：{total_seconds / total_imgs} 秒")
