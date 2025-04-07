@@ -61,11 +61,11 @@ if __name__ == "__main__":
     # vgg = VGG19_3_8_17_26().to(Config.device).eval()
     
     load_transform_net = TransformNet(Config.get_base()).to(Config.device)
-    load_model(load_transform_net, '../results/transform_epos=100_cw=1_sw=50_tvw=1e-6_interval=20.pth')
+    load_model(load_transform_net, '../results/attention_epos=100_cw=1_sw=150_tvw=1e-6_interval=20/transform.pth')
     load_transform_net.to(Config.device)
     
     load_metanet = MetaNet(load_transform_net.get_param_dict()).to(Config.device)
-    load_model(load_metanet, '../results/metanet_epos=100_cw=1_sw=50_tvw=1e-6_interval=20.pth')
+    load_model(load_metanet, '../results/attention_epos=100_cw=1_sw=150_tvw=1e-6_interval=20/metanet.pth')
     load_metanet.to(Config.device)
     
     if os.path.isfile(content_path) and os.path.isfile(style_path):
