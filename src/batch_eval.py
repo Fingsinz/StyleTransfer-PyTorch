@@ -6,15 +6,16 @@ import numpy as np
 import torch
 import torchvision.transforms as transforms
 
-from utils.utils import calculate_psnr, calculate_ssim, gram_matrix
+from utils.utils import calculate_psnr, calculate_ssim, gram_matrix, check_dir
 from models.networks import VGG19_Pretrained
 
 def cal_batch_ssim_psnr(content_path, transform_path, output_name=""):
+    out_dir = check_dir("../output")
     if output_name != "":
-        output = f"./metrics_{output_name}_psnr_ssim.csv"
+        output = f"{out_dir}/metrics_{output_name}_psnr_ssim.csv"
     else:
         now_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
-        output = f"./metrics_psnr_ssim_{now_time}.csv"
+        output = f"{out_dir}/metrics_psnr_ssim_{now_time}.csv"
     
     total_psnr = 0
     total_ssim = 0
@@ -46,11 +47,12 @@ def cal_batch_ssim_psnr(content_path, transform_path, output_name=""):
     print(f"[INFO] Metrics saved to {output}")
     
 def cal_gram_cosine_similarity(style_path, transform_path, output_name=""):
+    out_dir = check_dir("../output")
     if output_name != "":
-        output = f"./metrics_{output_name}_cosine_similarity.csv"
+        output = f"{out_dir}/metrics_{output_name}_cosine_similarity.csv"
     else:
         now_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
-        output = f"./metrics_cosine_similarity_{now_time}.csv"
+        output = f"{out_dir}/metrics_cosine_similarity_{now_time}.csv"
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
     vgg19 = VGG19_Pretrained([26]).eval()
