@@ -14,6 +14,8 @@
 StyleTransfer-PyTorch/
 ├── README.md                   # README
 ├── datasets/                   # 训练数据集
+├── output/                     # inference 程序输出
+├── results/                    # 训练结果 png & pth
 ├── script/                     # 获取数据集的脚本
 ├── src/                        # 源码
 │   ├── data/                   # 数据集加载模块
