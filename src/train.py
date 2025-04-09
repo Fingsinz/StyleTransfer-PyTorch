@@ -92,22 +92,22 @@ def train(model_vgg, model_transform, metanet):
             
             content_loss = content_weight * loss_content(transformed_features[2], content_features[2])
             
-            # Gram 矩阵损失替换均值和标准差损失
-            # transformed_mean_std = mean_std(transformed_features)
-            # style_loss = style_weight * loss_style(transformed_mean_std,
-            #                                        style_mean_std.expand_as(transformed_mean_std))   
+            # 均值和标准差损失
+            transformed_mean_std = mean_std(transformed_features)
+            style_loss = style_weight * loss_style(transformed_mean_std,
+                                                   style_mean_std.expand_as(transformed_mean_std))   
             
             # Gram 矩阵损失
-            style_grams = []
-            for sf in style_features:
-                sf_expanded = sf.repeat(transformed_features[0].shape[0], 1, 1, 1)
-                style_grams.append(gram_matrix(sf_expanded))
-            transformed_grams = [gram_matrix(f) for f in transformed_features]
+            # style_grams = []
+            # for sf in style_features:
+            #     sf_expanded = sf.repeat(transformed_features[0].shape[0], 1, 1, 1)
+            #     style_grams.append(gram_matrix(sf_expanded))
+            # transformed_grams = [gram_matrix(f) for f in transformed_features]
             
-            style_loss = 0
-            for sf, tf, w in zip(style_grams, transformed_grams, [1.0, 0.8, 0.5, 0.3]):
-                style_loss += w * loss_style(tf, sf)
-            style_loss = style_weight * style_loss
+            # style_loss = 0
+            # for sf, tf, w in zip(style_grams, transformed_grams, [1.0, 0.8, 0.5, 0.3]):
+            #     style_loss += w * loss_style(tf, sf)
+            # style_loss = style_weight * style_loss
             
             y = output
             tv_loss = tv_weight * (torch.sum(torch.abs(y[:, :, :, :-1] - y[:, :, :, 1:])) +
