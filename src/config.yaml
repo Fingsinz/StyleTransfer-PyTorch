@@ -1,9 +1,17 @@
 # config.yaml 用于配置 MetaNet 的超参数
 
+# 是否启用 swanlab 记录
 swanlab:
   enable: false
 
+# 模型保存路径
 model_save_path: "../results/models"
+
+# 是否使用注意力机制
+attention: true
+
+# 预训练的 VGG 模型版本，16 或 19
+vgg_version: 19
 
 training:
   # 训练轮数
