@@ -8,7 +8,11 @@ swanlab:
 model_save_path: "../results/models"
 
 # 是否使用注意力机制
-attention: true
+attention:
+  # 通道注意力
+  channel_attention: true
+  # 空间注意力
+  spatial_attention: true
 
 # 预训练的 VGG 模型版本，16 或 19
 vgg_version: 19

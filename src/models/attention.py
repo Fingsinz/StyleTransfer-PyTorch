@@ -24,4 +24,17 @@ class ChannelAttention(torch.nn.Module):
         x_weighted = x_grouped * weights                # [batch_size, num_groups, 128]
         return x_weighted.view(batch, -1)               # [batch_size, num_groups * 128]
         
+class SpatialAttention(torch.nn.Module):
+    def __init__(self):
+        super(SpatialAttention, self).__init__()
+        self.conv = torch.nn.Sequential(
+            torch.nn.Conv2d(2, 1, kernel_size=7, padding=3),
+            nn.Sigmoid()
+        )
+        
+    def forward(self, x):
+        avg_out = torch.mean(x, dim=1, keepdim=True)
+        max_out, _ = torch.max(x, dim=1, keepdim=True)
+        combined = torch.cat([avg_out, max_out], dim=1)
+        return self.conv(combined)
         
