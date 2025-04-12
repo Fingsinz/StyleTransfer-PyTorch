@@ -57,20 +57,23 @@ if __name__ == "__main__":
         print(f"[ERROR] {content_path} or {style_path} not exist")
         exit()
     
-    vgg = VGG16_3_8_15_22().to(Config.device).eval()
-    # vgg = VGG19_3_8_17_26().to(Config.device).eval()
+    vgg = None
+    if Config.vgg_version == 16:
+        vgg = VGG16_3_8_15_22().to(Config.device).eval()
+    elif Config.vgg_version == 19:
+        vgg = VGG19_3_8_17_26().to(Config.device).eval()
     
     load_transform_net = TransformNet(Config.get_base()).to(Config.device)
-    load_model(load_transform_net, '../results/attention_epos=100_cw=1_sw=150_tvw=1e-6_interval=20/transform.pth')
+    load_model(load_transform_net, '../results/vanilla_vgg19_epos=100_cw=1_sw=150_tvw=1e-6_interval=10/transform.pth')
     load_transform_net.to(Config.device)
     
     load_metanet = MetaNet(load_transform_net.get_param_dict()).to(Config.device)
-    load_model(load_metanet, '../results/attention_epos=100_cw=1_sw=150_tvw=1e-6_interval=20/metanet.pth')
+    load_model(load_metanet, '../results/vanilla_vgg19_epos=100_cw=1_sw=150_tvw=1e-6_interval=10/metanet.pth')
     load_metanet.to(Config.device)
     
     if os.path.isfile(content_path) and os.path.isfile(style_path):
         start = time.perf_counter()
-        one_image_transfer(content_path=content_path, style_path=style_path,
+        one_image_transfer(content_img_path=content_path, style_img_path=style_path,
                            model_vgg=vgg, model_transform=load_transform_net, metanet=load_metanet)
         end = time.perf_counter()
         print(f"[INFO] 生成图片用时：{end - start} 秒")
