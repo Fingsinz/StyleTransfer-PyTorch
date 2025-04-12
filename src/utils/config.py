@@ -15,8 +15,8 @@ is_swanlab = config['swanlab'].get('enable', False)
 vgg_version = config['vgg_version'] if config['vgg_version'] else 16
     
 def get_attention(training_config=config['attention']):
-    return [training_config.get('channel_attention', True),
-            training_config.get('spatial_attention', True)]
+    return [training_config.get('channel_attention', False),
+            training_config.get('spatial_attention', False)]
     
 def get_epochs(training_config=config['training']):
     return training_config.get('epochs', 10)
