@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 from models.networks import ConvLayer, ResidualBlock_2Conv_NoTrain, Conv2D_NoTrain
 from utils.utils import mean_std
-from models.attention import ChannelAttention
+from models.attention import ChannelAttention, SpatialAttention
 
 class TransformNet(nn.Module):
     """图像转换网络"""
@@ -70,19 +70,33 @@ class TransformNet(nn.Module):
             self.set_my_attr(name, weights[name][i])
             
 class MetaNet(nn.Module):
-    def __init__(self, param_dict):
+    def __init__(self, param_dict, channel_attention, spatial_attention):
         super(MetaNet, self).__init__()
         self.param_num = len(param_dict)
         self.hidden = nn.Linear(1920, 128 * self.param_num)
-        self.attention = ChannelAttention(num_groups=self.param_num) # 注意力层
+        self.channel_attention = channel_attention
+        self.spatial_attention = spatial_attention
+        
         self.fc_dict = {}
         for i, (name, params) in enumerate(param_dict.items()):
             self.fc_dict[name] = i
             setattr(self, 'fc{}'.format(i + 1), nn.Linear(128, params))
             
+        if channel_attention:
+            self.attention = ChannelAttention(num_groups=self.param_num) # 通道注意力
+        if spatial_attention:
+            self.spatial_att = SpatialAttention() # 空间注意力
+            
     def forward(self, mean_std_features):
         hidden = F.relu(self.hidden(mean_std_features))
-        hidden = self.attention(hidden) # 注意力处理
+        
+        if self.spatial_attention: # 空间注意力处理
+            hidden = hidden.view(-1, self.param_num, 128, 1, 1)
+            spatial_w = self.spatial_att(hidden.squeeze(-1).squeeze(-1))
+            hidden = hidden * spatial_w.unsqueeze(-1).unsqueeze(-1)
+        if self.channel_attention: # 通道注意力处理
+            hidden = self.attention(hidden)
+        
         filters = {}
         for name, i in self.fc_dict.items():
             fc = getattr(self, 'fc{}'.format(i + 1))
