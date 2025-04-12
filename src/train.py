@@ -193,9 +193,17 @@ if __name__ == '__main__':
             }
         )
     
-    vgg16 = VGG16_3_8_15_22().eval()
+    vgg = None
+    if Config.vgg_version == 16:
+        vgg = VGG16_3_8_15_22().to(Config.device).eval()
+    elif Config.vgg_version == 19:
+        vgg = VGG19_3_8_17_26().to(Config.device).eval()
+
+    vgg = vgg.to(device)
     transform_net = TransformNet(Config.get_base()).to(device)
-    metanet = MetaNet(transform_net.get_param_dict()).to(device)
+
+    attentions = Config.get_attention()
+    metanet = MetaNet(transform_net.get_param_dict(), attentions[0], attentions[1]).to(device)
     
     train(vgg16, transform_net, metanet)
     
