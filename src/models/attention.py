@@ -71,3 +71,29 @@ class SpatialAttention(torch.nn.Module):
         max_out, _ = torch.max(x, dim=1, keepdim=True)  # [B, 1, H, W]
         combined = torch.cat([avg_out, max_out], dim=1) # [B, 2, H, W]
         return self.conv(combined)                      # [B, 1, H, W]
+
+class SelfAttention(torch.nn.Module):
+    def __init__(self, in_dim):
+        super(SelfAttention, self).__init__()
+        self.quary = torch.nn.Conv2d(in_dim, in_dim // 8, 1)
+        self.key = torch.nn.Conv2d(in_dim, in_dim // 8, 1)
+        self.value = torch.nn.Conv2d(in_dim, in_dim, 1)
+        self.gamma = torch.nn.Parameter(torch.zeros(1))
+        self.softmax = torch.nn.Softmax(dim=-1)
+        
+    def forward(self, x):
+        """x: [B, C, H, W]"""
+        B, C, H, W = x.size()
+        
+        proj_query = self.quary(x).view(B, -1, H * W).permute(0, 2, 1)  # [B, H * W, C // 8]
+        proj_key = self.key(x).view(B, -1, H * W)                       # [B, C // 8, H * W]
+        
+        energy = torch.bmm(proj_query, proj_key)                        # [B, H * W, H * W]
+        attention = self.softmax(energy)                                # [B, H * W, H * W]
+        
+        proj_value = self.value(x).view(B, -1, H * W)                   # [B, C, H * W]
+        out = torch.bmm(proj_value, attention.permute(0, 2, 1))         # [B, C, H * W]
+        out = out.view(B, C, H, W)                                      # [B, C, H, W]
+        
+        return self.gamma * out + x
+        

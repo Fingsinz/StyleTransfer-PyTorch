@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 from models.networks import ConvLayer, ResidualBlock_2Conv_NoTrain, Conv2D_NoTrain
 from utils.utils import mean_std
-from models.attention import ChannelAttention, EnhancedChannelAttention, SpatialAttention
+from models.attention import *
 
 class TransformNet(nn.Module):
     """图像转换网络"""
@@ -85,6 +85,8 @@ class MetaNet(nn.Module):
             self.attention = ChannelAttention(num_groups=self.param_num)
         elif self.att_type == 'enhanced_channel': # 增强通道注意力
             self.attention = EnhancedChannelAttention(num_groups=self.param_num)
+        elif self.att_type == 'self':
+            self.attention = SelfAttention(in_dim=128 * self.param_num)
 
             
     def forward(self, mean_std_features):
@@ -94,6 +96,11 @@ class MetaNet(nn.Module):
             hidden = self.attention(hidden)
         elif self.att_type == 'enhanced_channel':
             hidden = self.attention(hidden)
+        elif self.att_type == 'self':
+            b = hidden.size(0)
+            hidden = hidden.view(b, 128 * self.param_num, 1, 1)  # [B, G, H, W] 伪空间
+            hidden = self.attention(hidden)
+            hidden = hidden.view(b, 128 * self.param_num)
         
         filters = {}
         for name, i in self.fc_dict.items():
