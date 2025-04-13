@@ -17,3 +17,6 @@ results/*
 
 # 临时测试 jpg
 src/*.jpg
+
+# config.yaml
+src/config.yaml
