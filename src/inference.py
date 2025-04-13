@@ -64,12 +64,12 @@ if __name__ == "__main__":
         vgg = VGG19_3_8_17_26().to(Config.device).eval()
     
     load_transform_net = TransformNet(Config.get_base()).to(Config.device)
-    load_model(load_transform_net, '../results/vanilla_vgg19_epos=100_cw=1_sw=150_tvw=1e-6_interval=10/transform.pth')
+    load_model(load_transform_net, '../results/attention_vgg19_epos=100_cw=1_sw=100_tvw=1e-6_interval=20/transform.pth')
     load_transform_net.to(Config.device)
     
-    attentions = Config.get_attention()
-    load_metanet = MetaNet(load_transform_net.get_param_dict(), attentions[0], attentions[1]).to(Config.device)
-    load_model(load_metanet, '../results/vanilla_vgg19_epos=100_cw=1_sw=150_tvw=1e-6_interval=10/metanet.pth')
+    attention = Config.get_attention()
+    load_metanet = MetaNet(load_transform_net.get_param_dict(), attention).to(Config.device)
+    load_model(load_metanet, '../results/attention_vgg19_epos=100_cw=1_sw=100_tvw=1e-6_interval=20/metanet.pth')
     load_metanet.to(Config.device)
     
     if os.path.isfile(content_path) and os.path.isfile(style_path):

@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from models.networks import VGG16_3_8_15_22
+from models.networks import VGG16_3_8_15_22, VGG19_3_8_17_26
 from models.metanet_model import TransformNet, MetaNet
 
 from data.image_dataset import ImageDataset
@@ -69,7 +69,7 @@ def train(model_vgg, model_transform, metanet):
         style_loss_sum = 0
         batch = 0
         
-        for content in tqdm(content_data_loader, desc=f"{epoch + 1} / {epochs}"):
+        for content in tqdm(content_data_loader, desc=f"{epoch + 1} / {epochs}", ncols=100):
             if batch % style_interval == 0:
                 random_idx = random.randint(0, len(style_dataset) - 1)
                 style_image = style_dataset[random_idx].unsqueeze(0).to(device)
@@ -202,8 +202,8 @@ if __name__ == '__main__':
     vgg = vgg.to(device)
     transform_net = TransformNet(Config.get_base()).to(device)
 
-    attentions = Config.get_attention()
-    metanet = MetaNet(transform_net.get_param_dict(), attentions[0], attentions[1]).to(device)
+    attention = Config.get_attention()
+    metanet = MetaNet(transform_net.get_param_dict(), attention).to(device)
     
-    train(vgg16, transform_net, metanet)
+    train(vgg, transform_net, metanet)
     

@@ -7,12 +7,8 @@ swanlab:
 # 模型保存路径
 model_save_path: "../results/models"
 
-# 是否使用注意力机制
-attention:
-  # 通道注意力
-  channel_attention: true
-  # 空间注意力
-  spatial_attention: true
+# 注意力机制： "channel", "enhanced_channel"
+attention: "enhanced_channel"
 
 # 预训练的 VGG 模型版本，16 或 19
 vgg_version: 19
@@ -25,13 +21,13 @@ training:
   # 学习率
   learning_rate: 0.001
   # 风格权重
-  style_weight: 50
+  style_weight: 150
   # 内容权重
   content_weight: 1
   # 梯度平滑权重
   tv_weight: 0.000001
   # 间隔多少 batch 换一张风格照片
-  style_interval: 20
+  style_interval: 10
   # 间隔多少轮记录一次
   record_per_epochs: 5
 
