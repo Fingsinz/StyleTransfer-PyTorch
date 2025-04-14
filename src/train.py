@@ -141,10 +141,10 @@ def train(model_vgg, model_transform, metanet):
                          "lr": last_lr})
             
         _now_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        print(f"{epoch + 1} / {epochs} | {_now_time} | \
-              content_loss: {content_loss_value} | \
-                  style_loss: {style_loss_value} | \
-                      lr: {last_lr}")
+        print(f"{epoch + 1} / {epochs} | {_now_time} | ", end="")
+        print(f"content_loss: {content_loss_value} | ", end="")
+        print(f"style_loss: {style_loss_value} | ", end="")
+        print(f"lr: {last_lr}")
         
         if (epoch + 1) % record_per_epochs == 0:
             if is_save:
