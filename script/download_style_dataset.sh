@@ -1,15 +1,15 @@
-# 国外地址，如果太卡可以替换为飞桨的数据集
-# https://aistudio.baidu.com/datasetdetail/222219 下面的 WikiArt2.zip
-wget https://ia801206.us.archive.org/11/items/WikiArt_dataset/WikiArt_000.tar
+# 飞桨数据集地址：https://aistudio.baidu.com/datasetdetail/222219
+# 浦源数据集地址：https://openxlab.org.cn/datasets/OpenDataLab/WikiArt
 
-if [ ! -d "../datasets" ]; then
-    mkdir ../datasets
-fi
+# 飞桨数据集直接获取链接，然后wget下载即可
 
-mv WikiArt_000.tar ../datasets/
+# 使用浦源数据集下载脚本如下
 
-cd ../datasets
+pip install openxlab
+pip install -U openxlab
 
-tar -xvf WikiArt_000.tar
+openxlab login
 
-rm WikiArt_000.tar
+openxlab dataset download --dataset-repo OpenDataLab/WikiArt --source-path /raw/wikiart.zip --target-path .
+
+unzip wikiart.zip
