@@ -92,8 +92,9 @@ class MetaNet(nn.Module):
             self.transformer_heads = 8
             self.embed_dim = 256
             self.proj = nn.Linear(1920, self.embed_dim)
+            self.expander = nn.Linear(256, 1920)
             self.transformer = VisionTransformer(
-                in_channels=1,
+                in_channels=self.embed_dim,
                 embed_dim=self.embed_dim,
                 num_layers=self.transformer_layers,
                 num_heads=self.transformer_heads
@@ -115,10 +116,11 @@ class MetaNet(nn.Module):
             hidden = hidden.view(b, 128 * self.param_num)
         elif self.att_type == 'transformer':        # Transformer
             B = mean_std_features.size(0)
-            x = self. proj(mean_std_features)               # [B, 256]
+            x = self.proj(mean_std_features)                # [B, 256]
             x = x.unsqueeze(-1).unsqueeze(-1)               # [B, 256, 1, 1]
             trans_features = self.transformer(x)            # [B, 256, 1, 1]
             trans_features = trans_features.view(B, -1)     # [B, 256]
+            trans_features = self.expander(trans_features)  # [B, 1920]
             combined = trans_features + mean_std_features
             hidden = F.relu(self.hidden(combined))
         
