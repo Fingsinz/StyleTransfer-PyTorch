@@ -87,20 +87,40 @@ class MetaNet(nn.Module):
             self.attention = EnhancedChannelAttention(num_groups=self.param_num)
         elif self.att_type == 'self':
             self.attention = SelfAttention(in_dim=128 * self.param_num)
+        elif self.att_type == 'transformer':
+            self.transformer_layers = 4
+            self.transformer_heads = 8
+            self.embed_dim = 256
+            self.proj = nn.Linear(1920, self.embed_dim)
+            self.transformer = VisionTransformer(
+                in_channels=1,
+                embed_dim=self.embed_dim,
+                num_layers=self.transformer_layers,
+                num_heads=self.transformer_heads
+            )
 
             
     def forward(self, mean_std_features):
-        hidden = F.relu(self.hidden(mean_std_features))
-        
-        if self.att_type == 'channel': # 注意力处理
+        if self.att_type == 'channel':              # 通道注意力
+            hidden = F.relu(self.hidden(mean_std_features))
             hidden = self.attention(hidden)
-        elif self.att_type == 'enhanced_channel':
+        elif self.att_type == 'enhanced_channel':   # 增强通道注意力
+            hidden = F.relu(self.hidden(mean_std_features))
             hidden = self.attention(hidden)
-        elif self.att_type == 'self':
+        elif self.att_type == 'self':               # 自注意力
+            hidden = F.relu(self.hidden(mean_std_features))
             b = hidden.size(0)
             hidden = hidden.view(b, 128 * self.param_num, 1, 1)  # [B, G, H, W] 伪空间
             hidden = self.attention(hidden)
             hidden = hidden.view(b, 128 * self.param_num)
+        elif self.att_type == 'transformer':        # Transformer
+            B = mean_std_features.size(0)
+            x = self. proj(mean_std_features)               # [B, 256]
+            x = x.unsqueeze(-1).unsqueeze(-1)               # [B, 256, 1, 1]
+            trans_features = self.transformer(x)            # [B, 256, 1, 1]
+            trans_features = trans_features.view(B, -1)     # [B, 256]
+            combined = trans_features + mean_std_features
+            hidden = F.relu(self.hidden(combined))
         
         filters = {}
         for name, i in self.fc_dict.items():

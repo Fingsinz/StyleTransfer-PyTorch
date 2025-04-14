@@ -97,3 +97,48 @@ class SelfAttention(torch.nn.Module):
         
         return self.gamma * out + x
         
+class TransformerBlock(torch.nn.Module):
+    def __init__(self, embed_dim, num_heads, dropout=0.1):
+        super(TransformerBlock, self).__init__()
+        self.norm1 = torch.nn.LayerNorm(embed_dim)
+        self.attn = torch.nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout)
+        self.norm2 = torch.nn.LayerNorm(embed_dim)
+        self.ffn = torch.nn.Sequential(
+            torch.nn.Linear(embed_dim, embed_dim * 4),
+            torch.nn.GELU(),
+            torch.nn.Linear(embed_dim * 4, embed_dim),
+            torch.nn.Dropout(dropout)
+        )
+    
+    def forward(self, x):
+        """x: [L, B, C] (序列长度，批次大小，特征维度)"""
+        attn_output , _ = self.attn(x, x, x)
+        x = x + attn_output
+        x = self.norm1(x)
+        
+        ffn_output = self.ffn(x)
+        x = x + ffn_output
+        x = self.norm2(x)
+        
+        return x
+    
+class VisionTransformer(torch.nn.Module):
+    def __init__(self, in_channels, embed_dim, num_layers, num_heads):
+        super(VisionTransformer, self).__init__()
+        self.patch_embed = torch.nn.Conv2d(in_channels, embed_dim, kernel_size=1, stride=1)
+        self.transformer = torch.nn.Sequential(*[
+            TransformerBlock(embed_dim, num_heads) for _ in range(num_layers)
+        ])
+        
+    def forward(self, x):
+        """x: [B, C, H, W]"""
+        x = self.patch_embed(x)             # [B, E, H, W]
+        B, E, H, W = x.size()
+        
+        x = x.flatten(2).permute(2, 0, 1)   # [H * W, B, E]
+        x = self.transformer(x)             # [H * W, B, E]
+        x = x.permute(1, 2, 0)              # [B, E, H * W]
+        x = x.reshape(B, E, H, W)           # [B, E, H, W]
+        
+        return x
+        
