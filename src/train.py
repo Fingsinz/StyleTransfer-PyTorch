@@ -14,6 +14,7 @@ from models.metanet_model import TransformNet, MetaNet
 from data.image_dataset import ImageDataset
 import utils.config as Config
 from utils.utils import mean_std, denormalize, create_grid, save_model, check_dir, gram_matrix
+from utils.recorder import Recorder
 
 import swanlab
 
@@ -50,7 +51,7 @@ def train(model_vgg, model_transform, metanet):
     optimizer = torch.optim.Adam(trainable_params.values(), Config.get_lr())
     
     # 使用余弦退火学习率调度器
-    schedulaer = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100)
+    schedulaer = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
     # 增加梯度裁剪防止梯度爆炸
     torch.nn.utils.clip_grad_norm_(trainable_params.values(), max_norm=1.0)
     
@@ -61,8 +62,11 @@ def train(model_vgg, model_transform, metanet):
     test_batch = Config.get_test_batch()
     
     is_save = False if Config.get_model_save() == '' else True
+    
     now_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
-    record_path = check_dir(f"../results/{now_time}")
+    record_path = check_dir(f"../results/{now_time}/")
+    recorder = Recorder(record_path, "loss.csv")
+    recorder.set_statistic(["epoch", "content_loss", "style_loss", "lr"])
     
     for epoch in range(epochs):
         content_loss_sum = 0
@@ -125,18 +129,26 @@ def train(model_vgg, model_transform, metanet):
             
             batch += 1
 
+        content_loss_value = content_loss_sum / len(content_data_loader)
+        style_loss_value = style_loss_sum / len(content_data_loader)
+        last_lr = schedulaer.get_last_lr()[0]
+        recorder.record([f"{epoch + 1}", f"{content_loss_value}",
+                         f"{style_loss_value}", f"{last_lr}"])
+
         if Config.is_swanlab:        
-            swanlab.log({"content_loss": content_loss_sum / len(content_data_loader),
-                         "style_loss": style_loss_sum / len(content_data_loader)})
+            swanlab.log({"content_loss": content_loss_value,
+                         "style_loss": style_loss_value,
+                         "lr": last_lr})
             
         _now_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print(f"{epoch + 1} / {epochs} | {_now_time} | \
-            content_loss: {content_loss_sum / len(content_data_loader)} | \
-                style_loss: {style_loss_sum / len(content_data_loader)}")
+              content_loss: {content_loss_value} | \
+                  style_loss: {style_loss_value} | \
+                      lr: {last_lr}")
         
         if (epoch + 1) % record_per_epochs == 0:
             if is_save:
-                result_dir = check_dir(record_path + "/pth/")
+                result_dir = check_dir(record_path + "pth/")
                 save_model(model_transform, result_dir, f"transform_{epoch + 1}.pth")
                 save_model(metanet, result_dir, f"metanet_{epoch + 1}.pth")
                 
@@ -169,7 +181,7 @@ def val_in_training(content_dataset, style_dataset, model_vgg, model_transform, 
         merged_image = create_grid(style_images, content_vis, transformed_vis)
         
         if val_path != "":
-            val_path = check_dir(val_path + "/png/")
+            val_path = check_dir(val_path + "png/")
             file_name = f"{val_path}transformed_grid_{epoch}.png"
             Image.fromarray(merged_image).save(file_name)
             print(f"[INFO] Image saved to {file_name}")
