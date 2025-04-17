@@ -63,14 +63,18 @@ if __name__ == "__main__":
     elif Config.vgg_version == 19:
         vgg = VGG19_3_8_17_26().to(Config.device).eval()
     
+    metanet_path, transformnet_path = Config.get_inference_model_path()
+    
     load_transform_net = TransformNet(Config.get_base()).to(Config.device)
-    load_model(load_transform_net, '../results/attention_vgg19_epos=100_cw=1_sw=100_tvw=1e-6_interval=20/transform.pth')
+    load_model(load_transform_net, transformnet_path)
     load_transform_net.to(Config.device)
     
     attention = Config.get_attention()
     load_metanet = MetaNet(load_transform_net.get_param_dict(), attention).to(Config.device)
-    load_model(load_metanet, '../results/attention_vgg19_epos=100_cw=1_sw=100_tvw=1e-6_interval=20/metanet.pth')
+    load_model(load_metanet, metanet_path)
     load_metanet.to(Config.device)
+    
+    Config.print_inference_config()
     
     if os.path.isfile(content_path) and os.path.isfile(style_path):
         start = time.perf_counter()
@@ -79,7 +83,7 @@ if __name__ == "__main__":
         end = time.perf_counter()
         print(f"[INFO] 生成图片用时：{end - start} 秒")
         exit()
-    else:
+    elif os.path.isdir(content_path) and os.path.isdir(style_path):
         total_seconds = 0
         total_imgs = 0
         for content_img_path in os.listdir(content_path):
@@ -93,6 +97,8 @@ if __name__ == "__main__":
                 total_seconds += end - start
         print(f"[INFO] 生成 {total_imgs} 张图片平均用时：{total_seconds / total_imgs} 秒")
         exit()
-
+    else:
+        print(f"[ERROR] {content_path} or {style_path} not exist")
+        exit()
 
     

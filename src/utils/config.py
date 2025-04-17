@@ -1,4 +1,5 @@
 import yaml
+from typing import Tuple
 import torch
 import torch.optim as optim
 
@@ -13,43 +14,72 @@ config = load_config("config.yaml")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 is_swanlab = config['swanlab'].get('enable', False)
 vgg_version = config['vgg_version'] if config['vgg_version'] else 16
-    
-def get_attention(config=config):
+
+def get_attention(config=config) -> str:
     return config['attention']
     
-def get_epochs(training_config=config['training']):
+def get_epochs(training_config=config['training']) -> int:
     return training_config.get('epochs', 10)
 
-def get_lr(training_config=config['training']):
+def get_lr(training_config=config['training']) -> float:
     return training_config.get('lr', 1e-3)
 
-def get_style_interval(training_config=config['training']):
+def get_style_interval(training_config=config['training']) -> int:
     return training_config.get('style_interval', 20)
 
-def get_training_weight(training_config=config['training']):
+def get_training_weight(training_config=config['training']) -> list[float]:
     return [training_config.get('style_weight', 50),
             training_config.get('content_weight', 1),
             training_config.get('tv_weight', 1e-6)]
 
-def get_record_per_epochs(training_config=config['training']):
+def get_record_per_epochs(training_config=config['training']) -> int:
     return training_config.get('record_per_epochs', 5)
 
-def get_training_batch(training_config=config['training']):
+def get_training_batch(training_config=config['training']) -> int:
     return training_config.get('batch_size', 8)
 
-def get_test_batch(test_config=config['test']):
-    return test_config.get('test_batch_size', 4)
+def get_test_batch(test_config=config['test']) -> int:
+    return test_config.get('test_batch', 4)
 
-def get_base(training_config=config['training']):
+def get_base(training_config=config['training']) -> int:
     return training_config.get('base', 32)
 
-def get_data(data_config=config['data']):
+def get_data(data_config=config['data']) -> Tuple[ImageDataset, ImageDataset]:
     content_dataset = ImageDataset(data_config['content_dir'], transform=data_transform)
     style_dataset = ImageDataset(data_config['style_dir'], transform=data_transform)
     return content_dataset, style_dataset
 
-def get_num_workers(data_config=config['data']):
+def get_num_workers(data_config=config['data']) -> int:
     return data_config.get('num_workers', 4)
 
-def get_model_save(model_config=config['model_save_path']):
+def get_model_save(model_config=config['model_save_path']) -> str:
     return model_config
+
+def get_inference_model_path(inference_config=config['inference']) -> list[str]:
+    return [inference_config['metanet'], inference_config['transformnet']]
+
+def print_training_config(config=config):
+    print("[CONFIG]")
+    print(f"\tSwanlab: {is_swanlab}")
+    print(f"\tDevice: {device}")
+    print(f"\tVGG: {vgg_version}")    
+    print(f"\tAttention: {config['attention']}")
+    
+    for key, value in config['training'].items():
+        print(f"\t{key}: {value}")
+        
+    print("[DATA]")
+    print(f"\tContent: {config['data']['content_dir']}")
+    print(f"\tStyle: {config['data']['style_dir']}")
+    
+    print("[Test]")
+    print(f"\tBatch: {config['test']['test_batch']}")
+
+def print_inference_config(config=config):
+    print("[CONFIG]")
+    print(f"\tDevice: {device}")
+    print(f"\tVGG: {vgg_version}")    
+    print(f"\tAttention: {config['attention']}")
+    
+    for key, value in config['inference'].items():
+        print(f"\t{key}: {value}")

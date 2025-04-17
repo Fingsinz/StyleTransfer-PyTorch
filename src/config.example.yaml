@@ -13,13 +13,14 @@ attention: "channel"
 # 预训练的 VGG 模型版本，16 或 19
 vgg_version: 19
 
+# 训练配置
 training:
   # 训练轮数
   epochs: 100
   # 批次大小
   batch_size: 8
   # 学习率
-  learning_rate: 0.001
+  lr: 0.001
   # 风格权重
   style_weight: 150
   # 内容权重
@@ -33,9 +34,17 @@ training:
 
   base: 32
 
+# 测试配置
 test:
   # 测试批次大小
   test_batch: 4
+
+# 推演配置
+inference:
+  # MetaNet 模型路径
+  metanet: 
+  # TransformNet 模型路径
+  transformnet:
 
 data:
   # 内容数据集路径

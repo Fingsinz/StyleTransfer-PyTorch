@@ -173,7 +173,7 @@ def val_in_training(content_dataset, style_dataset, model_vgg, model_transform, 
     
         style_denorm = denormalize(style_tensor).squeeze(0)
         style_vis = style_denorm.cpu().permute(1, 2, 0).numpy()
-        style_images = np.repeat(style_vis[np.newaxis], 4, axis=0)
+        style_images = np.repeat(style_vis[np.newaxis], test_batch, axis=0)
 
         content_vis = denormalize(content_images).cpu().permute(0, 2, 3, 1).numpy()
         transformed_vis = denormalize(transformed_images).cpu().detach().permute(0, 2, 3, 1).numpy()
@@ -217,5 +217,6 @@ if __name__ == '__main__':
     attention = Config.get_attention()
     metanet = MetaNet(transform_net.get_param_dict(), attention).to(device)
     
+    Config.print_training_config()
     train(vgg, transform_net, metanet)
     
