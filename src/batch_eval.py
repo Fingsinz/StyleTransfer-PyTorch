@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torchvision.transforms as transforms
 
-from utils.utils import calculate_psnr, calculate_ssim, gram_matrix, check_dir
+from utils.utils import calculate_psnr, calculate_ssim, calculate_ms_ssim, gram_matrix, check_dir
 from models.networks import VGG19_Pretrained
 
 def cal_batch_ssim_psnr(content_path, transform_path, output_name=""):
@@ -19,10 +19,11 @@ def cal_batch_ssim_psnr(content_path, transform_path, output_name=""):
     
     total_psnr = 0
     total_ssim = 0
+    total_ms_ssim = 0
     files = 0
     
     with open(output, "w") as f:
-        f.write("content,transform,psnr,ssim\n")
+        f.write("content,transform,psnr,ssim,ms_ssim\n")
         for content_img_path in os.listdir(content_path):
             for transform_img_path in os.listdir(transform_path):
                 content_name = content_img_path.split('.')[0]
@@ -36,14 +37,17 @@ def cal_batch_ssim_psnr(content_path, transform_path, output_name=""):
                 
                     psnr = calculate_psnr(content, transform)
                     ssim = calculate_ssim(content, transform)
+                    ms_ssim = calculate_ms_ssim(content, transform)
                     
                     total_psnr += psnr
                     total_ssim += ssim
+                    total_ms_ssim += ms_ssim
                     files += 1
                     
-                    f.write(f"{content_img_path},{transform_img_path},{psnr:.6f},{ssim:.6f}\n")
-        f.write(f"Average,,{(total_psnr / files):.6f},{(total_ssim /files):.6f}\n")
-    print(f"[INFO] Average PSNR: {(total_psnr / files):.6f}, Average SSIM: {(total_ssim /files):.6f}")
+                    f.write(f"{content_img_path},{transform_img_path},{psnr:.6f},{ssim:.6f},{ms_ssim:.6f}\n")
+        f.write(f"Average,,{(total_psnr / files):.6f},{(total_ssim /files):.6f}, {(total_ms_ssim /files):.6f}\n")
+    print(f"[INFO] Average PSNR: {(total_psnr / files):.6f}, Average SSIM: {(total_ssim /files):.6f}, "
+          f"Average MS-SSIM: {(total_ms_ssim /files):.6f}")
     print(f"[INFO] Metrics saved to {output}")
     
 def cal_gram_cosine_similarity(style_path, transform_path, output_name=""):

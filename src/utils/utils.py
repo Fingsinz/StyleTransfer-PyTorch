@@ -2,6 +2,7 @@ import os
 import torch
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
+from skimage.transform import pyramid_reduce
 from typing import Tuple, Dict, List
 
 def gram_matrix(feature):
@@ -69,6 +70,41 @@ def calculate_ssim(content: np.ndarray, transformed: np.ndarray) -> float:
         ssim_score.append(score)
 
     return np.mean(ssim_score)
+
+def calculate_ms_ssim(content: np.ndarray, transformed: np.ndarray,
+                      weights: list = None, levels: int = 5, channel_axis: int = 2) -> float:
+    """计算 MS-SSIM 值"""
+    if content.shape != transformed.shape:
+        raise ValueError("Input images must have the same dimensions.")
+    
+    data_range = content.max() - content.min()
+    if data_range <= 0:
+        return 0.0
+    
+    if weights is None:
+        weights = [0.0448, 0.2856, 0.3001, 0.2363, 0.1333][:levels]
+    weights = np.array(weights)
+    weights /= weights.sum()
+    
+    mssim_values = []
+    
+    current_content = content.copy()
+    current_transformed = transformed.copy()
+    
+    for _ in range(levels):
+        ssim_val = ssim(
+            current_content,
+            current_transformed,
+            data_range=data_range,
+            channel_axis=channel_axis,
+            win_size=3
+        )
+        mssim_values.append(ssim_val)
+        
+        current_content = pyramid_reduce(current_content, channel_axis=channel_axis)
+        current_transformed = pyramid_reduce(current_transformed, channel_axis=channel_axis)
+    
+    return float(np.dot(mssim_values, weights))
 
 def calculate_psnr(content: np.ndarray, transformed: np.ndarray) -> float:
     """计算 PSNR 值"""
