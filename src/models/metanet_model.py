@@ -102,7 +102,9 @@ class MetaNet(nn.Module):
 
             
     def forward(self, mean_std_features):
-        if self.att_type == 'channel':              # 通道注意力
+        if self.att_type == 'none':                 # 没有注意力
+            hidden = F.relu(self.hidden(mean_std_features))
+        elif self.att_type == 'channel':              # 通道注意力
             hidden = F.relu(self.hidden(mean_std_features))
             hidden = self.attention(hidden)
         elif self.att_type == 'enhanced_channel':   # 增强通道注意力

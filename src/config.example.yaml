@@ -7,7 +7,7 @@ swanlab:
 # 模型保存路径
 model_save_path: "../results/models"
 
-# 注意力机制： "channel", "enhanced_channel",  "self", "transformer"
+# 注意力机制： "none", "channel", "enhanced_channel",  "self", "transformer"
 attention: "channel"
 
 # 预训练的 VGG 模型版本，16 或 19
