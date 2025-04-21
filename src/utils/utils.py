@@ -51,7 +51,6 @@ def save_model(model: torch.nn.Module, save_path: str, model_name: str) -> None:
     model_save_path = save_path + model_name
     
     torch.save(obj=model.state_dict(), f=model_save_path)
-    print(f"[INFO] Model saved to {model_save_path}")
 
 def load_model(model: torch.nn.Module, path: str) -> torch.nn.Module:
     """加载模型"""

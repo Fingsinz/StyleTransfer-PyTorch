@@ -5,6 +5,8 @@ import torch.optim as optim
 
 from data.image_dataset import ImageDataset, data_transform
 
+from .recorder import Recorder
+
 def load_config(config_path):
     with open(config_path, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
@@ -58,22 +60,22 @@ def get_model_save(model_config=config['model_save_path']) -> str:
 def get_inference_model_path(inference_config=config['inference']) -> list[str]:
     return [inference_config['metanet'], inference_config['transformnet']]
 
-def print_training_config(config=config):
-    print("[CONFIG]")
-    print(f"\tSwanlab: {is_swanlab}")
-    print(f"\tDevice: {device}")
-    print(f"\tVGG: {vgg_version}")    
-    print(f"\tAttention: {config['attention']}")
+def print_training_config(recorder: Recorder, config=config):
+    recorder.log("[CONFIG]")
+    recorder.log(f"\tSwanlab: {is_swanlab}")
+    recorder.log(f"\tDevice: {device}")
+    recorder.log(f"\tVGG: {vgg_version}")    
+    recorder.log(f"\tAttention: {config['attention']}")
     
     for key, value in config['training'].items():
-        print(f"\t{key}: {value}")
+        recorder.log(f"\t{key}: {value}")
         
-    print("[DATA]")
-    print(f"\tContent: {config['data']['content_dir']}")
-    print(f"\tStyle: {config['data']['style_dir']}")
+    recorder.log("[DATA]")
+    recorder.log(f"\tContent: {config['data']['content_dir']}")
+    recorder.log(f"\tStyle: {config['data']['style_dir']}")
     
-    print("[Test]")
-    print(f"\tBatch: {config['test']['test_batch']}")
+    recorder.log("[Test]")
+    recorder.log(f"\tBatch: {config['test']['test_batch']}")
 
 def print_inference_config(config=config):
     print("[CONFIG]")

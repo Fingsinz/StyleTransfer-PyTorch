@@ -1,3 +1,4 @@
+import time
 from utils.utils import check_dir
 
 class Recorder:
@@ -15,3 +16,12 @@ class Recorder:
             f.write(','.join(text))
             f.write('\n')
 
+    def log(self, text: str, end='\n') -> None:
+        now_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        text = '[' + now_time + ']' + '\t' + text
+        
+        with open(self.filename, 'a') as f:
+            f.write(text)
+            f.write(end)
+
+        print(text, end=end)

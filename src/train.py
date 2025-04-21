@@ -23,7 +23,7 @@ style_weight, content_weight, tv_weight = Config.get_training_weight()
 style_interval = Config.get_style_interval()
 epochs = Config.get_epochs()
 
-def train(model_vgg, model_transform, metanet):
+def train(model_vgg, model_transform, metanet, record_path):
     model_vgg = model_vgg.to(device)
     model_transform = model_transform.to(device)
     metanet = metanet.to(device)
@@ -63,11 +63,11 @@ def train(model_vgg, model_transform, metanet):
     
     is_save = False if Config.get_model_save() == '' else True
     
-    now_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
-    record_path = check_dir(f"../results/{now_time}/")
+    logger = Recorder(record_path, "log.txt")
+    Config.print_training_config(logger)
     recorder = Recorder(record_path, "loss.csv")
     recorder.set_statistic(["epoch", "content_loss", "style_loss", "lr"])
-    
+
     for epoch in range(epochs):
         content_loss_sum = 0
         style_loss_sum = 0
@@ -139,25 +139,24 @@ def train(model_vgg, model_transform, metanet):
             swanlab.log({"content_loss": content_loss_value,
                          "style_loss": style_loss_value,
                          "lr": last_lr})
-            
-        _now_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        print(f"{epoch + 1} / {epochs} | {_now_time} | ", end="")
-        print(f"content_loss: {content_loss_value} | ", end="")
-        print(f"style_loss: {style_loss_value} | ", end="")
-        print(f"lr: {last_lr}")
+
+        logger.log(f"{epoch + 1} / {epochs} | content_loss: {content_loss_value} | "
+                   f"style_loss: {style_loss_value} | lr: {last_lr}", )
         
         if (epoch + 1) % record_per_epochs == 0:
             if is_save:
                 result_dir = check_dir(record_path + "pth/")
                 save_model(model_transform, result_dir, f"transform_{epoch + 1}.pth")
+                logger.log(f"[INFO] Model saved to {result_dir}transform_{epoch + 1}.pth")
                 save_model(metanet, result_dir, f"metanet_{epoch + 1}.pth")
+                logger.log(f"[INFO] Model saved to {result_dir}metanet_{epoch + 1}.pth")
                 
             val_in_training(content_dataset, style_dataset,
                             model_vgg, model_transform, metanet,
-                            test_batch, epoch + 1, record_path)
+                            test_batch, epoch + 1, logger, record_path)
 
 def val_in_training(content_dataset, style_dataset, model_vgg, model_transform, metanet,
-                    test_batch, epoch, val_path=""):
+                    test_batch, epoch, logger, val_path=""):
     random_idx = random.randint(0, len(style_dataset) - 1)
     style_tensor = style_dataset[random_idx].unsqueeze(0).to(device)
     
@@ -184,7 +183,7 @@ def val_in_training(content_dataset, style_dataset, model_vgg, model_transform, 
             val_path = check_dir(val_path + "png/")
             file_name = f"{val_path}transformed_grid_{epoch}.png"
             Image.fromarray(merged_image).save(file_name)
-            print(f"[INFO] Image saved to {file_name}")
+            logger.log(f"[INFO] Image saved to {file_name}")
     
         if Config.is_swanlab:
             swanlab.log({'transformed_grid': swanlab.Image(merged_image)})
@@ -216,7 +215,9 @@ if __name__ == '__main__':
 
     attention = Config.get_attention()
     metanet = MetaNet(transform_net.get_param_dict(), attention).to(device)
+
+    now_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
+    record_path = check_dir(f"../results/{now_time}/")
     
-    Config.print_training_config()
-    train(vgg, transform_net, metanet)
+    train(vgg, transform_net, metanet, record_path)
     
