@@ -49,12 +49,12 @@ class EnhancedChannelAttention(torch.nn.Module):
         x_grouped = x.view(batch, self.num_groups, 128)             # [B, G, 128]
         
         gap_group = x_grouped.mean(dim=1)                           # [B, 128]
-        group_w = self.group_fc(gap_group).unsqueeze(1)             # [B, 1, 128]
+        group_w = self.group_fc(gap_group)                          # [B, 128]
         
-        gap_global = x_grouped.view(batch, -1)                      # [B, G * 128]
-        global_w = self.global_fc(gap_global).unsqueeze(1)          # [B, 1, 128]
+        gap_global = x                                              # [B, G * 128]
+        global_w = self.global_fc(gap_global)                       # [B, 128]
                 
-        combined_w = group_w * 0.7 + global_w * 0.3                 # [B, 1, 128]
+        combined_w = (group_w * 0.7 + global_w * 0.3).unsqueeze(1)  # [B, 1, 128]
         return (x_grouped * combined_w).view(batch, -1)             # [B, G * 128]
      
 class SpatialAttention(torch.nn.Module):
