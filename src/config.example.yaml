@@ -41,10 +41,10 @@ test:
 
 # 推演配置
 inference:
-  # MetaNet 模型路径
-  metanet: 
-  # TransformNet 模型路径
-  transformnet:
+  # 推演时使用的 MetaNet 模型路径
+  metanet: "xxxx/metanet.pth"
+  # 推演时使用的 TransformNet 模型路径
+  transformnet: "xxx/transformnet.pth"
 
 data:
   # 内容数据集路径
