@@ -113,10 +113,18 @@ def cal_gram_cosine_similarity(style_path, transform_path, output_name=""):
     print(f"[INFO] Metrics saved to {output}")
     
 if __name__ == "__main__":
+    if len(sys.argv) < 4:
+        print(f"[ERROR] Usage: python {sys.argv[0]} <content_path> <style_path> <transform_path>")
+        exit()
+    
     content_path = sys.argv[1]
     style_path = sys.argv[2]
     transform_path = sys.argv[3]
-    output_name = sys.argv[4]
+    
+    if len(sys.argv) == 5:
+        output_name = sys.argv[4]
+    else:
+        output_name = ""
     
     if not os.path.exists(content_path) or not os.path.exists(style_path) or not os.path.exists(transform_path):
         print(f"[ERROR] {content_path} or {style_path} or {transform_path} not exist")
