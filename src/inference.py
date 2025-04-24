@@ -5,7 +5,6 @@ import torch
 from PIL import Image
 import torchvision.transforms as transforms
 import numpy as np
-import matplotlib.pyplot as plt
 
 import utils.config as Config
 from models.networks import VGG16_3_8_15_22, VGG19_3_8_17_26
