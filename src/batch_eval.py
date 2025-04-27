@@ -124,7 +124,8 @@ def cal_fid(content_path, transform_path, output_name=""):
         output = f"{out_dir}/metrics_fid_{now_time}.csv"
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = inception_v3(weights=Inception_V3_Weights.IMAGENET1K_V1, aux_logits=True).eval()
+    model = inception_v3(weights=Inception_V3_Weights.DEFAULT, aux_logits=True).eval()
+    model.aux_logits = False
     model.fc = torch.nn.Identity()
     model.eval().to(device)
     
@@ -187,8 +188,8 @@ if __name__ == "__main__":
         exit()
 
     if mode == "1":
-        cal_batch_psnr_ssim(content_path, transform_path, output_name)
+        cal_batch_ssim_psnr(content_path, transform_path, output_name)
     elif mode == "2":
-        cal_batch_gram_cosine_similarity(style_path, transform_path, output_name)
+        cal_gram_cosine_similarity(style_path, transform_path, output_name)
     elif mode == "3":
         cal_fid(content_path, transform_path, output_name)
