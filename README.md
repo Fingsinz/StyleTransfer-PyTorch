@@ -105,12 +105,13 @@ cd ./src
 2. 使用以下命令进行评估：
 
 ```bash
-python batch_eval.py content/ style/ transformed/ [output_name]
+python batch_eval.py <content_path> <style_path> <transform_path> <mode> [output_name]
 ```
 
 - 该命令用于小批量评估性能。
-- `content/`：内容图像文件夹。
-- `style/`：风格图像文件夹。
-- `transformed/`：迁移后的图像文件夹。
-- `output_name`：输出文件名。
+- `content_path`：内容图像文件夹。
+- `style_path`：风格图像文件夹。
+- `transform_path`：迁移后的图像文件夹。
+- `mode`：评估模式。1 -> psnr and ssim, 2 -> Gram 余弦相似度, 3 -> FID。
+- `output_name`：输出文件名（可选）。
 
