@@ -12,6 +12,8 @@ from models.networks import VGG19_Pretrained
 from torchvision.models import inception_v3, Inception_V3_Weights
 from scipy.linalg import sqrtm
 
+from tqdm import tqdm
+
 def cal_batch_ssim_psnr(content_path, transform_path, output_name=""):
     out_dir = check_dir("../output")
     if output_name != "":
@@ -25,6 +27,8 @@ def cal_batch_ssim_psnr(content_path, transform_path, output_name=""):
     total_ms_ssim = 0
     files = 0
     
+    bar = tqdm(total=len(os.listdir(transform_path)), ncols=100)
+    bar.set_description("Calculating PSNR, SSIM, MS-SSIM...")
     with open(output, "w") as f:
         f.write("content,transform,psnr,ssim,ms_ssim\n")
         for content_img_path in os.listdir(content_path):
@@ -48,10 +52,11 @@ def cal_batch_ssim_psnr(content_path, transform_path, output_name=""):
                     files += 1
                     
                     f.write(f"{content_img_path},{transform_img_path},{psnr:.6f},{ssim:.6f},{ms_ssim:.6f}\n")
+                    bar.update(1)
         f.write(f"Average,,{(total_psnr / files):.6f},{(total_ssim /files):.6f}, {(total_ms_ssim /files):.6f}\n")
-    print(f"[INFO] Average PSNR: {(total_psnr / files):.6f}, Average SSIM: {(total_ssim /files):.6f}, "
+    print(f"\n[INFO] Average PSNR: {(total_psnr / files):.6f}, Average SSIM: {(total_ssim /files):.6f}, "
           f"Average MS-SSIM: {(total_ms_ssim /files):.6f}")
-    print(f"[INFO] Metrics saved to {output}")
+    print(f"[INFO] Saved to {output}")
     
 def cal_gram_cosine_similarity(style_path, transform_path, output_name=""):
     out_dir = check_dir("../output")
@@ -68,7 +73,9 @@ def cal_gram_cosine_similarity(style_path, transform_path, output_name=""):
     total = 0
     files = 0
     
-    with open(output, "w") as f:
+    bar = tqdm(total=len(os.listdir(transform_path)), ncols=100)
+    bar.set_description("Calculating cosine similarity...")
+    with open(output, "w") as f:     
         f.write("content,transform,cosine_similarity\n")
         for style_img_path in os.listdir(style_path):
             for transform_img_path in os.listdir(transform_path):
@@ -111,11 +118,12 @@ def cal_gram_cosine_similarity(style_path, transform_path, output_name=""):
                     files += 1
                     
                     f.write(f"{style_img_path},{transform_img_path},{cosine_sim.item():.6f}\n")
+                    bar.update(1)
         f.write(f"Average,,{(total /files):.6f}\n")
-    print(f"[INFO] Average cosine similarity: {(total /files):.6f}")
-    print(f"[INFO] Metrics saved to {output}")
+    print(f"\n[INFO] Average cosine similarity: {(total /files):.6f}")
+    print(f"[INFO] Saved to {output}")
 
-def cal_fid(content_path, transform_path, output_name=""):
+def cal_fid(content_path, style_path, transform_path, output_name=""):
     out_dir = check_dir("../output")
     if output_name != "":
         output = f"{out_dir}/statistics_{output_name}_fid.csv"
@@ -135,7 +143,7 @@ def cal_fid(content_path, transform_path, output_name=""):
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
     
-    def get_features(path):
+    def get_features1(path: str):
         feats = []
         for img in os.listdir(path):
             img_path = f"{path}/{img}"
@@ -147,25 +155,57 @@ def cal_fid(content_path, transform_path, output_name=""):
             feats.append(feat)
         return np.array(feats)
     
-    content_feats = get_features(content_path)
-    transform_feats = get_features(transform_path)
+    def get_features2(paths: list[str]):
+        feats = []
+        for img in paths:
+            img = Image.open(img).convert('RGB')
+            tensor = preprocess(img).unsqueeze(0).to(device)
+            
+            with torch.inference_mode():
+                feat = model(tensor).cpu().numpy().reshape(-1)
+            feats.append(feat)
+        return np.array(feats)
     
-    mu1, sigma1 = np.mean(content_feats, axis=0), np.cov(content_feats, rowvar=False)
-    mu2, sigma2 = np.mean(transform_feats, axis=0), np.cov(transform_feats, rowvar=False)
+    def get_batch_fid(content_path, transforms: list[str]):
+        content_feats = get_features1(content_path)
+        transform_feats = get_features2(transforms)
+        
+        mu1, sigma1 = np.mean(content_feats, axis=0), np.cov(content_feats, rowvar=False)
+        mu2, sigma2 = np.mean(transform_feats, axis=0), np.cov(transform_feats, rowvar=False)
+        
+        diff = mu1 - mu2
+        covmean = sqrtm(sigma1.dot(sigma2))
+        
+        if np.iscomplexobj(covmean):
+            covmean = covmean.real
+        
+        fid = diff.dot(diff) + np.trace(sigma1 + sigma2 - 2 * covmean)
+        return fid
     
-    diff = mu1 - mu2
-    covmean = sqrtm(sigma1.dot(sigma2))
+    avg_fid = 0
     
-    if np.iscomplexobj(covmean):
-        covmean = covmean.real
-    
-    fid = diff.dot(diff) + np.trace(sigma1 + sigma2 - 2 * covmean)
-    
+    bar = tqdm(os.listdir(style_path), ncols=100)
+    bar.set_description("Calculating FID...")
     with open(output, "w") as f:
-        f.write("fid\n")
-        f.write(f"{fid:.6f}\n")
-    print(f"[INFO] FID: {fid}")
-    print(f"[INFO] FID Metrics saved to {output}")
+        f.write("style,fid\n")
+
+        for style in bar:
+            style = style.split('.')[0]
+            this_trans = []
+            for transform in os.listdir(transform_path):
+                if transform.find(style) != -1:
+                    this_trans.append(f"{transform_path}/{transform}")
+            fid = get_batch_fid(content_path, this_trans)
+            avg_fid += fid
+            
+            f.write(f"{style},{fid:.6f}\n")
+        
+        avg_fid /= len(os.listdir(style_path))
+    
+        f.write(f"Average,{avg_fid:.6f}\n")
+        
+    print(f"\n[INFO] FID: {avg_fid}")
+    print(f"[INFO] Saved to {output}")
     
 if __name__ == "__main__":
     if len(sys.argv) < 5 or sys.argv[4] not in ["1", "2", "3"]:
@@ -192,4 +232,4 @@ if __name__ == "__main__":
     elif mode == "2":
         cal_gram_cosine_similarity(style_path, transform_path, output_name)
     elif mode == "3":
-        cal_fid(content_path, transform_path, output_name)
+        cal_fid(content_path, style_path, transform_path, output_name)
