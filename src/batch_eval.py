@@ -15,10 +15,10 @@ from scipy.linalg import sqrtm
 def cal_batch_ssim_psnr(content_path, transform_path, output_name=""):
     out_dir = check_dir("../output")
     if output_name != "":
-        output = f"{out_dir}/metrics_{output_name}_psnr_ssim.csv"
+        output = f"{out_dir}/statistics_{output_name}_psnr_ssim.csv"
     else:
         now_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
-        output = f"{out_dir}/metrics_psnr_ssim_{now_time}.csv"
+        output = f"{out_dir}/statistics_psnr_ssim_{now_time}.csv"
     
     total_psnr = 0
     total_ssim = 0
@@ -56,10 +56,10 @@ def cal_batch_ssim_psnr(content_path, transform_path, output_name=""):
 def cal_gram_cosine_similarity(style_path, transform_path, output_name=""):
     out_dir = check_dir("../output")
     if output_name != "":
-        output = f"{out_dir}/metrics_{output_name}_cosine_similarity.csv"
+        output = f"{out_dir}/statistics_{output_name}_cosine_similarity.csv"
     else:
         now_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
-        output = f"{out_dir}/metrics_cosine_similarity_{now_time}.csv"
+        output = f"{out_dir}/statistics_cosine_similarity_{now_time}.csv"
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
     vgg19 = VGG19_Pretrained([26]).eval()
@@ -118,10 +118,10 @@ def cal_gram_cosine_similarity(style_path, transform_path, output_name=""):
 def cal_fid(content_path, transform_path, output_name=""):
     out_dir = check_dir("../output")
     if output_name != "":
-        output = f"{out_dir}/metrics_{output_name}_fid.csv"
+        output = f"{out_dir}/statistics_{output_name}_fid.csv"
     else:
         now_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
-        output = f"{out_dir}/metrics_fid_{now_time}.csv"
+        output = f"{out_dir}/statistics_fid_{now_time}.csv"
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = inception_v3(weights=Inception_V3_Weights.DEFAULT, aux_logits=True).eval()
