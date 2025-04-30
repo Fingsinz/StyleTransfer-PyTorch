@@ -11,7 +11,9 @@ from models.networks import VGG16_3_8_15_22, VGG19_3_8_17_26
 from models.metanet_model import TransformNet, MetaNet
 from utils.utils import mean_std, denormalize, check_dir, load_model
 
-def one_image_transfer(content_img_path, style_img_path, model_vgg, model_transform, metanet):
+from tqdm import tqdm
+
+def one_image_transfer(content_img_path, style_img_path, model_vgg, model_transform, metanet, log=True):
     preprocess = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -45,7 +47,9 @@ def one_image_transfer(content_img_path, style_img_path, model_vgg, model_transf
 
     output_path = f"./{out_dir}/{filename}"
     transformed_pil.save(output_path)
-    print(f'[INFO] "{content_img_path}" to "{style_img_path}". Result saved to {output_path}')
+    
+    if log:
+        print(f'[INFO] "{content_img_path}" to "{style_img_path}". Result saved to {output_path}')
     
 if __name__ == "__main__":
     
@@ -85,15 +89,21 @@ if __name__ == "__main__":
     elif os.path.isdir(content_path) and os.path.isdir(style_path):
         total_seconds = 0
         total_imgs = 0
+        bar = tqdm(total=(len(os.listdir(content_path)) * len(os.listdir(style_path))),
+                   ncols=100)
+        bar.set_description("Generating...")
+        
         for content_img_path in os.listdir(content_path):
             for style_img_path in os.listdir(style_path):
                 total_imgs += 1
                 start = time.perf_counter()
                 one_image_transfer(content_img_path=f"{content_path}/{content_img_path}",
                                    style_img_path=f"{style_path}/{style_img_path}",
-                                   model_vgg=vgg, model_transform=load_transform_net, metanet=load_metanet)
+                                   model_vgg=vgg, model_transform=load_transform_net,
+                                   metanet=load_metanet, log=False)
                 end = time.perf_counter()
                 total_seconds += end - start
+                bar.update(1)
         print(f"[INFO] 生成 {total_imgs} 张图片平均用时：{total_seconds / total_imgs} 秒")
         exit()
     else:
