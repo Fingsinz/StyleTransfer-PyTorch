@@ -47,7 +47,7 @@ def one_image_transfer(content_img_path, style_img_path, model_vgg, model_transf
     filename = os.path.basename(style_img_path).split('.')[0] + '_' + \
         os.path.basename(content_img_path).split('.')[0] + '.png'
 
-    output_path = f"./{out_dir}/{filename}"
+    output_path = f"{out_dir}/{filename}"
     transformed_pil.save(output_path)
     
     if log:
