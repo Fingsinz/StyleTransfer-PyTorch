@@ -20,6 +20,9 @@ vgg_version = config['vgg_version'] if config['vgg_version'] else 16
 def get_attention(config=config) -> str:
     return config['attention']
     
+def get_base(config=config) -> int:
+    return config['base']
+    
 def get_epochs(training_config=config['training']) -> int:
     return training_config.get('epochs', 10)
 
@@ -43,9 +46,6 @@ def get_training_batch(training_config=config['training']) -> int:
 def get_test_batch(test_config=config['test']) -> int:
     return test_config.get('test_batch', 4)
 
-def get_base(training_config=config['training']) -> int:
-    return training_config.get('base', 32)
-
 def get_data(data_config=config['data']) -> Tuple[ImageDataset, ImageDataset]:
     content_dataset = ImageDataset(data_config['content_dir'], transform=data_transform)
     style_dataset = ImageDataset(data_config['style_dir'], transform=data_transform)
@@ -60,12 +60,16 @@ def get_model_save(model_config=config['model_save_path']) -> str:
 def get_inference_model_path(inference_config=config['inference']) -> list[str]:
     return [inference_config['metanet'], inference_config['transformnet']]
 
+def get_output_path(inference_config=config['inference']) -> str:
+    return inference_config.get('output', "../output/")
+
 def print_training_config(recorder: Recorder, config=config):
     recorder.log("[CONFIG]")
     recorder.log(f"\tSwanlab: {is_swanlab}")
     recorder.log(f"\tDevice: {device}")
     recorder.log(f"\tVGG: {vgg_version}")    
     recorder.log(f"\tAttention: {config['attention']}")
+    recorder.log(f"\tBase: {config['base']}")
     
     for key, value in config['training'].items():
         recorder.log(f"\t{key}: {value}")
@@ -82,6 +86,7 @@ def print_inference_config(config=config):
     print(f"\tDevice: {device}")
     print(f"\tVGG: {vgg_version}")    
     print(f"\tAttention: {config['attention']}")
+    print(f"\tBase: {config['base']}")
     
     for key, value in config['inference'].items():
         print(f"\t{key}: {value}")

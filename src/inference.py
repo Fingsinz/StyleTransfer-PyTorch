@@ -13,6 +13,8 @@ from utils.utils import mean_std, denormalize, check_dir, load_model
 
 from tqdm import tqdm
 
+output = Config.get_output_path()
+
 def one_image_transfer(content_img_path, style_img_path, model_vgg, model_transform, metanet, log=True):
     preprocess = transforms.Compose([
         transforms.ToTensor(),
@@ -41,7 +43,7 @@ def one_image_transfer(content_img_path, style_img_path, model_vgg, model_transf
     transformed_pil = Image.fromarray((transformed_vis * 255).astype(np.uint8))
     transformed_pil = transformed_pil.resize((content_img_width, content_img_height), Image.LANCZOS)
 
-    out_dir = check_dir('../output')
+    out_dir = check_dir(output)
     filename = os.path.basename(style_img_path).split('.')[0] + '_' + \
         os.path.basename(content_img_path).split('.')[0] + '.png'
 
@@ -104,7 +106,7 @@ if __name__ == "__main__":
                 end = time.perf_counter()
                 total_seconds += end - start
                 bar.update(1)
-        print(f"[INFO] 生成 {total_imgs} 张图片平均用时：{total_seconds / total_imgs} 秒")
+        print(f"\n[INFO] 生成 {total_imgs} 张图片平均用时：{total_seconds / total_imgs} 秒")
         exit()
     else:
         print(f"[ERROR] {content_path} or {style_path} not exist")

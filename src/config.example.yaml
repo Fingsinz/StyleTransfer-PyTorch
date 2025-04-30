@@ -13,6 +13,9 @@ attention: "channel"
 # 预训练的 VGG 模型版本，16 或 19
 vgg_version: 19
 
+# 图像变换网络通道基数，影响模型结构复杂度
+base: 32
+
 # 训练配置
 training:
   # 训练轮数
@@ -32,8 +35,6 @@ training:
   # 间隔多少轮记录一次
   record_per_epochs: 10
 
-  base: 32
-
 # 测试配置
 test:
   # 测试批次大小
@@ -45,6 +46,8 @@ inference:
   metanet: "xxxx/metanet.pth"
   # 推演时使用的 TransformNet 模型路径
   transformnet: "xxx/transformnet.pth"
+  # 迁移图片输出路径
+  output: "../output/"
 
 data:
   # 内容数据集路径
