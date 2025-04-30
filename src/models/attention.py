@@ -75,7 +75,7 @@ class SpatialAttention(torch.nn.Module):
 class SelfAttention(torch.nn.Module):
     def __init__(self, in_dim):
         super(SelfAttention, self).__init__()
-        self.quary = torch.nn.Conv2d(in_dim, in_dim // 8, 1)
+        self.query = torch.nn.Conv2d(in_dim, in_dim // 8, 1)
         self.key = torch.nn.Conv2d(in_dim, in_dim // 8, 1)
         self.value = torch.nn.Conv2d(in_dim, in_dim, 1)
         self.gamma = torch.nn.Parameter(torch.zeros(1))
@@ -85,7 +85,7 @@ class SelfAttention(torch.nn.Module):
         """x: [B, C, H, W]"""
         B, C, H, W = x.size()
         
-        proj_query = self.quary(x).view(B, -1, H * W).permute(0, 2, 1)  # [B, H * W, C // 8]
+        proj_query = self.query(x).view(B, -1, H * W).permute(0, 2, 1)  # [B, H * W, C // 8]
         proj_key = self.key(x).view(B, -1, H * W)                       # [B, C // 8, H * W]
         
         energy = torch.bmm(proj_query, proj_key)                        # [B, H * W, H * W]
