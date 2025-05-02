@@ -67,7 +67,7 @@ def cal_gram_cosine_similarity(style_path, transform_path, output_name=""):
         output = f"{out_dir}/statistics_cosine_similarity_{now_time}.csv"
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    vgg19 = VGG19_Pretrained([26]).eval()
+    vgg19 = VGG19_Pretrained([17, 26]).eval()
     vgg19 = vgg19.to(device)
     
     total = 0
@@ -103,7 +103,7 @@ def cal_gram_cosine_similarity(style_path, transform_path, output_name=""):
                     transform = transform.unsqueeze(0).to(device)
                     style_features = vgg19(style)
                     transform_features = vgg19(transform)
-                    
+                                    
                     gram1 = gram_matrix(style_features[0])
                     gram2 = gram_matrix(transform_features[0])
                     gram1 = gram1.flatten()
@@ -111,7 +111,19 @@ def cal_gram_cosine_similarity(style_path, transform_path, output_name=""):
 
                     norm1 = torch.norm(gram1)
                     norm2 = torch.norm(gram2)
-                    cosine_sim = torch.dot(gram1, gram2) / (norm1 * norm2 + 1e-8)
+                    
+                    gram3 = gram_matrix(style_features[1])
+                    gram4 = gram_matrix(transform_features[1])
+                    gram3 = gram3.flatten()
+                    gram4 = gram4.flatten()
+
+                    norm3 = torch.norm(gram3)
+                    norm4 = torch.norm(gram4)
+                    
+                    cosine_sim1 = torch.dot(gram1, gram2) / (norm1 * norm2 + 1e-8)
+                    cosine_sim2 = torch.dot(gram3, gram4) / (norm3 * norm4 + 1e-8)
+                    
+                    cosine_sim = 0.4 * cosine_sim1 + 0.6 * cosine_sim2
                     
                     total += cosine_sim.item()
 
