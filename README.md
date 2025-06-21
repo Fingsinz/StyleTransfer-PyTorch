@@ -33,6 +33,19 @@ StyleTransfer-PyTorch/
 └── requirements.txt            # 环境依赖
 ```
 
+项目训练环境（超算互联网）：异构加速卡
+
+- 硬件配置
+    - 处理器：Hygon C86 7285 32-core Processor
+    - 内存：128GB DDR4
+    - 计算网络：200Gb IB
+    - 主频：2.0GHz
+    - 显存：16GB HBM2
+    - 性能数据：FP64:6.9Tflops
+- 软件环境
+    - Ubuntu 22.04.5 LTS
+    - Python 3.11.9
+
 ## 二、快速上手
 
 ### 2.1 安装环境
@@ -51,10 +64,45 @@ git clone https://github.com/Fingsinz/StyleTransfer-PyTorch.git
 
 *如果不训练模型，可以跳过此步骤。*
 
-可参考 `script/download_style_dataset.sh` 和 `script/download_content_dataset.sh` 脚本自行配置数据集。
+数据集来源（浦源）：
 
-- 本代码使用 OpenXLab 中的数据集，其中数据集需要保证内容图像文件夹和风格图像文件夹下直接包含图像文件，无需子文件夹。
-    - OpenXLab 中 WikiArt 数据集对风格流派做了分类，需要提取子文件夹中的图像到同一文件夹下，并删除空子文件夹。
+- 下载方式详见浦源页面。
+- 内容图像数据集（`COCO_2017/raw/Imagestest2017.zip` 6.19 GB）：https://openxlab.org.cn/datasets/OpenDataLab/COCO_2017/
+- 风格图像数据集（`WikiArt/raw/wikiart.zip` 25GB）：https://openxlab.org.cn/datasets/OpenDataLab/WikiArt
+
+浦源数据集中数据集需要保证内容图像文件夹和风格图像文件夹下直接包含图像文件，无需子文件夹。OpenXLab 中 WikiArt 数据集对风格流派做了分类，需要提取子文件夹中的图像到同一文件夹下，并删除空子文件夹。
+
+<details>
+<summary>代码及命令</summary>
+
+```python
+import os
+import shutil
+
+def extract_files(folder_path):
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            file_path = os.path.join(root, file)
+            try:
+                shutil.move(file_path, os.path.join(folder_path, file))
+            except Exception as e:
+                print(f"移动文件 {file_path} 时出错: {e}")
+
+
+if __name__ == "__main__":
+    target_folder = './wikiart'  # 这里可以修改为你要操作的文件夹路径
+    extract_files(target_folder)
+```
+
+执行上面的 Python 的脚本后，运行下面的命令去除空文件夹：
+
+```bash
+find ./wikiart -type d -empty -delete
+```
+
+*可以先不用 `-delete` 选项，查看空文件夹，再用 `-delete` 去除*
+
+</details>
 
 ### 2.3 训练模型
 
@@ -105,7 +153,7 @@ cd ./src
 2. 使用以下命令进行评估：
 
 ```bash
-python batch_eval.py <content_path> <style_path> <transform_path> <mode> [output_name]
+python batch_eval.py <content_path> <style_path> <transformed_path> <mode> [output_name]
 ```
 
 - 该命令用于小批量评估性能。
@@ -114,4 +162,3 @@ python batch_eval.py <content_path> <style_path> <transform_path> <mode> [output
 - `transform_path`：迁移后的图像文件夹。
 - `mode`：评估模式。1 -> psnr and ssim, 2 -> Gram 余弦相似度, 3 -> FID。
 - `output_name`：输出文件名（可选）。
-
