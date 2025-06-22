@@ -22,7 +22,6 @@ StyleTransfer-PyTorch/
 ├── datasets/                   # 训练数据集
 ├── output/                     # 推演程序、评估程序输出
 ├── results/                    # 训练结果 png & pth
-├── script/                     # 获取数据集的脚本
 ├── src/                        # 源码
 │   ├── data/                   # 数据集加载模块
 │   ├── models/                 # 模型定义模块
@@ -47,6 +46,8 @@ StyleTransfer-PyTorch/
 - 软件环境
     - Ubuntu 22.04.5 LTS
     - Python 3.11.9
+
+模型已经发布到Release。
 
 ## 二、快速上手
 
